@@ -33,7 +33,10 @@ parser.add_argument('--k-train', default=60, type=int)
 parser.add_argument('--k-test', default=5, type=int)
 parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
+parser.add_argument('--gpuid', default=1, type=int)
 args = parser.parse_args()
+
+torch.cuda.set_device(device=args.gpuid)
 
 evaluation_episodes = 1000
 episodes_per_epoch = 100
