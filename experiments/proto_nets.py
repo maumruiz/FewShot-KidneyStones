@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import argparse
 
 from few_shot.datasets import OmniglotDataset, MiniImageNet
-from few_shot.models import get_few_shot_encoder
+from few_shot.models import CTMNetwork
 from few_shot.core import NShotTaskSampler, EvaluateFewShot, prepare_nshot_task
 from few_shot.proto import proto_net_episode
 from few_shot.train import fit
@@ -26,15 +26,15 @@ torch.backends.cudnn.benchmark = True
 # Parameters #
 ##############
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset')
+parser.add_argument('--dataset', default='miniImageNet')
 parser.add_argument('--distance', default='l2')
 parser.add_argument('--n-train', default=1, type=int)
 parser.add_argument('--n-test', default=1, type=int)
-parser.add_argument('--k-train', default=60, type=int)
+parser.add_argument('--k-train', default=5, type=int)
 parser.add_argument('--k-test', default=5, type=int)
 parser.add_argument('--q-train', default=5, type=int)
 parser.add_argument('--q-test', default=1, type=int)
-parser.add_argument('--gpuid', default=1, type=int)
+parser.add_argument('--gpuid', default=0, type=int)
 args = parser.parse_args()
 
 torch.cuda.set_device(device=args.gpuid)
@@ -80,7 +80,7 @@ evaluation_taskloader = DataLoader(
 #########
 # Model #
 #########
-model = get_few_shot_encoder(num_input_channels)
+model = CTMNetwork(args.k_test, args.n_test, args.q_test, num_input_channels)
 model.to(device, dtype=torch.double)
 
 
@@ -130,5 +130,5 @@ fit(
     metrics=['categorical_accuracy'],
     fit_function=proto_net_episode,
     fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train, 'q_queries': args.q_train, 'train': True,
-                         'distance': args.distance},
+                        'distance': args.distance},
 )
