@@ -5,6 +5,8 @@ import torch
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 import argparse
+import random
+import string
 
 from few_shot.datasets import OmniglotDataset, MiniImageNet
 from few_shot.models import CTMNetwork
@@ -99,7 +101,7 @@ def lr_schedule(epoch, lr):
     else:
         return lr
 
-
+random_str = ''.join(random.choice(string.ascii_letters) for i in range(10))
 callbacks = [
     EvaluateFewShot(
         eval_fn=proto_net_episode,
@@ -116,7 +118,7 @@ callbacks = [
         monitor=f'val_{args.n_test}-shot_{args.k_test}-way_acc'
     ),
     LearningRateScheduler(schedule=lr_schedule),
-    CSVLogger(PATH + f'/logs/proto_nets/{param_str}.csv'),
+    CSVLogger(PATH + f'/logs/proto_nets/{param_str}_{random_str}.csv'),
 ]
 
 fit(
