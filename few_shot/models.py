@@ -127,12 +127,12 @@ class CTM(nn.Module):
         # TODO: Try other network combinations: Using resnet block, changing d2, d3, m2, m3
 
         in_concentrator = n_shot * in_channels
-        self.concentrator = self._make_vgg_layer(2, in_concentrator, in_channels) # Input shape (NK, m1, d1, d1) -> Output shape (N, m2, d2, d2)
+        self.concentrator = self._make_vgg_layer(4, in_concentrator, in_channels) # Input shape (NK, m1, d1, d1) -> Output shape (N, m2, d2, d2)
 
         in_projector = n_way * in_channels
-        self.projector = self._make_vgg_layer(2, in_projector, in_channels) # Input shape (1, Nm2, d2, d2) -> Output shape (1, m3, d3, d3)
+        self.projector = self._make_vgg_layer(4, in_projector, in_channels) # Input shape (1, Nm2, d2, d2) -> Output shape (1, m3, d3, d3)
 
-        self.reshaper = self._make_vgg_layer(2, in_channels, in_channels) # Output shape (NK, m3, d3, d3)
+        self.reshaper = self._make_vgg_layer(4, in_channels, in_channels) # Output shape (NK, m3, d3, d3)
 
         self._init_weights()
         self.n_way = n_way

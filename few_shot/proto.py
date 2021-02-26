@@ -42,10 +42,8 @@ def proto_net_episode(model: Module,
         model.eval()
 
     # Embed all samples
-    embeddings = model(x)
-    # embeddings = model.encoder(x)
-
-    # support_embeddings, query_embeddings = model.ctm(embeddings)
+    # embeddings = model(x)
+    embeddings = model.encoder(x)
 
     # Samples are ordered by the NShotWrapper class as follows:
     # k lots of n support samples from a particular class
@@ -53,7 +51,7 @@ def proto_net_episode(model: Module,
     support = embeddings[:n_shot*k_way]
     queries = embeddings[n_shot*k_way:]
 
-    # support, queries = model.ctm(support, queries)
+    support, queries = model.ctm(support, queries)
     
     # Flatten the features
     support = support.reshape(n_shot*k_way, -1)

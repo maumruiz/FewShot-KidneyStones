@@ -82,8 +82,8 @@ evaluation_taskloader = DataLoader(
 #########
 # Model #
 #########
-# model = CTMNetwork(args.k_test, args.n_test, args.q_test, num_input_channels)
-model = get_few_shot_encoder(num_input_channels)
+model = CTMNetwork(args.k_test, args.n_test, args.q_test, num_input_channels)
+# model = get_few_shot_encoder(num_input_channels)
 model.to(device, dtype=torch.double)
 
 
