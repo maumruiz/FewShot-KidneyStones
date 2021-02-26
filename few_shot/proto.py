@@ -42,7 +42,8 @@ def proto_net_episode(model: Module,
         model.eval()
 
     # Embed all samples
-    embeddings = model.encoder(x)
+    embeddings = model(x)
+    # embeddings = model.encoder(x)
 
     # support_embeddings, query_embeddings = model.ctm(embeddings)
 
@@ -52,8 +53,9 @@ def proto_net_episode(model: Module,
     support = embeddings[:n_shot*k_way]
     queries = embeddings[n_shot*k_way:]
 
-    support, queries = model.ctm(support, queries)
-
+    # support, queries = model.ctm(support, queries)
+    
+    # Flatten the features
     support = support.reshape(n_shot*k_way, -1)
     queries = queries.reshape(q_queries*k_way, -1)
 
