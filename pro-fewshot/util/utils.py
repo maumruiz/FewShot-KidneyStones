@@ -2,6 +2,8 @@ import os
 import shutil
 import time
 import pprint
+import random
+import torch
 
 def set_gpu(x):
     os.environ['CUDA_VISIBLE_DEVICES'] = x
@@ -56,15 +58,16 @@ class Timer:
         s = time.perf_counter() - self._start_time
         self._start_time = None
 
-        m = 0
-        h = 0
+        s = int(s)
+        m = int(0)
+        h = int(0)
 
         if s > 59:
-            m = seconds / 60
-            s = seconds % 60
+            m = s // 60
+            s = s % 60
 
         if m > 59:
-            h = m / 60
+            h = m // 60
             m = m % 60
 
         print(f"Elapsed time: {h:d}:{m:02d}:{s:02d}")

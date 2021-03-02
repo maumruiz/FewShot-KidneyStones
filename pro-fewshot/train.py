@@ -22,6 +22,8 @@ if __name__ == '__main__':
     parser.add_argument('--query', type=int, default=15)
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--step_size', type=int, default=10)
+    parser.add_argument('--gamma', type=float, default=0.2)
+    parser.add_argument('--temperature', type=float, default=1)
     parser.add_argument('--model_type', type=str, default='ConvNet', choices=['ConvNet', 'ResNet'])
     parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
 
@@ -34,14 +36,14 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=1234)
 
 
-    _log.info('###### Starting experiment with args: ######')
+    print('###### Starting experiment with args: ######')
     args = parser.parse_args()
     pprint(vars(args))
     set_gpu(args.gpu)
     set_seed(args.seed)
     save_path1 = f'{args.dataset}-{args.model_type}-ProtoNet'
     save_path1 = '-'.join([args.dataset, args.model_type, 'ProtoNet'])
-    save_path2 = f'{args.way}way_{args.shot}shot_{args.query}q_{args.lr}lr_{args.step_size}step'
+    save_path2 = f'{args.way}way{args.shot}shot_{args.query}q_{args.lr}lr_{args.step_size}step_{args.gamma}g_{args.temperature}t'
     args.save_path = osp.join(args.save_path, osp.join(save_path1, save_path2))
     ensure_path(args.save_path)  
     timer = Timer()
@@ -67,7 +69,7 @@ if __name__ == '__main__':
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
     
 
-    _log.info('###### Create model ######')
+    print('###### Create model ######')
     model = ProtoNet(args)
     if args.model_type == 'ConvNet':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -118,7 +120,6 @@ if __name__ == '__main__':
     trlog['max_acc'] = 0.0
     trlog['max_acc_epoch'] = 0
 
-    timer = Timer()
     global_count = 0
     writer = SummaryWriter(log_dir=args.save_path)
     
@@ -150,8 +151,6 @@ if __name__ == '__main__':
             writer.add_scalar('data/loss', float(loss), global_count)
             writer.add_scalar('data/acc', float(acc), global_count)
             train_batches.set_description(f'epoch {epoch}, loss={loss.item():.4f} acc={acc:.4f}')
-            # print('epoch {}, train {}/{}, loss={:.4f} acc={:.4f}'
-            #       .format(epoch, i, len(train_loader), loss.item(), acc))
 
             tl.add(loss.item())
             ta.add(acc)
@@ -210,7 +209,6 @@ if __name__ == '__main__':
 
         save_model('epoch-last')
 
-        print('ETA:{}/{}'.format(timer.measure(), timer.measure(epoch / args.max_epoch)))
         lr_scheduler.step()
     writer.close()
 
