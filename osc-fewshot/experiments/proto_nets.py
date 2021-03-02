@@ -17,7 +17,7 @@ from few_shot.callbacks import *
 from few_shot.utils import setup_dirs
 from config import PATH
 
-
+# def run_protonets():
 setup_dirs()
 assert torch.cuda.is_available()
 device = torch.device('cuda')
