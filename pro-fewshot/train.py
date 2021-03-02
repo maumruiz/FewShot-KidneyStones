@@ -1,15 +1,17 @@
 import argparse
 import os.path as osp
 
+import tqdm
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+
 from dataloader.samplers import CategoriesSampler
 from models.protonet import ProtoNet
 from util.utils import pprint, set_gpu, ensure_path, Averager, Timer
 from util.metric import compute_confidence_interval, count_acc
-from tensorboardX import SummaryWriter
 
 
 if __name__ == '__main__':
@@ -40,7 +42,6 @@ if __name__ == '__main__':
     save_path2 = '_'.join([str(args.shot), str(args.query), str(args.way), 
                                str(args.step_size), str(args.gamma), str(args.lr), str(args.temperature)])
     args.save_path = osp.join(args.save_path, osp.join(save_path1, save_path2))
-    ensure_path(save_path1, remove=False)
     ensure_path(args.save_path)  
 
     if args.dataset == 'MiniImageNet':
@@ -113,7 +114,7 @@ if __name__ == '__main__':
 
     timer = Timer()
     global_count = 0
-    writer = SummaryWriter(logdir=args.save_path)
+    writer = SummaryWriter(log_dir=args.save_path)
     
     for epoch in range(1, args.max_epoch + 1):
         lr_scheduler.step()
@@ -126,8 +127,10 @@ if __name__ == '__main__':
             label = label.type(torch.cuda.LongTensor)
         else:
             label = label.type(torch.LongTensor)
-            
-        for i, batch in enumerate(train_loader, 1):
+        
+        train_batches = tqdm.tqdm(train_loader)
+        for i, batch in enumerate(train_batches):
+        # for i, batch in enumerate(train_loader, 1):
             global_count = global_count + 1
             if torch.cuda.is_available():
                 data, _ = [_.cuda() for _ in batch]
@@ -140,8 +143,9 @@ if __name__ == '__main__':
             acc = count_acc(logits, label)
             writer.add_scalar('data/loss', float(loss), global_count)
             writer.add_scalar('data/acc', float(acc), global_count)
-            print('epoch {}, train {}/{}, loss={:.4f} acc={:.4f}'
-                  .format(epoch, i, len(train_loader), loss.item(), acc))
+            train_batches.set_description(f'epoch {epoch}, loss={loss.item():.4f} acc={acc:.4f}')
+            # print('epoch {}, train {}/{}, loss={:.4f} acc={:.4f}'
+            #       .format(epoch, i, len(train_loader), loss.item(), acc))
 
             tl.add(loss.item())
             ta.add(acc)

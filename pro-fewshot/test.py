@@ -9,7 +9,7 @@ from dataloader.samplers import CategoriesSampler
 from models.protonet import ProtoNet
 from util.utils import pprint, set_gpu, ensure_path, Averager, Timer
 from util.metric import compute_confidence_interval, count_acc
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 
 if __name__ == '__main__':
