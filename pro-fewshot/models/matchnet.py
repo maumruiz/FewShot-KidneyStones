@@ -50,15 +50,15 @@ class MatchNet(nn.Module):
         self.args = args # information about Shot and Way
         
         if args.model_type == 'ConvNet':
-            from feat.networks.convnet import ConvNet
+            from networks.convnet import ConvNet
             self.encoder = ConvNet()
             layer_size = 32
         elif args.model_type == 'ResNet':
-            from feat.networks.resnet import ResNet
+            from networks.resnet import ResNet
             self.encoder = ResNet()
             layer_size = 320
         elif args.model_type == 'AmdimNet':
-            from feat.networks.amdimnet import AmdimNet
+            from networks.amdimnet import AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
             layer_size = int(args.rkhs/2)
         else:

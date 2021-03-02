@@ -5,36 +5,32 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from feat.dataloader.samplers import CategoriesSampler
-from feat.models.protonet import ProtoNet
-from feat.utils import pprint, set_gpu, ensure_path, Averager, Timer, count_acc, compute_confidence_interval
+from dataloader.samplers import CategoriesSampler
+from models.protonet import ProtoNet
+from util.utils import pprint, set_gpu, ensure_path, Averager, Timer
+from util.metric import compute_confidence_interval, count_acc
 from tensorboardX import SummaryWriter
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--max_epoch', type=int, default=200)
+    parser.add_argument('--way', type=int, default=5)
     parser.add_argument('--shot', type=int, default=1)
     parser.add_argument('--query', type=int, default=15)
-    parser.add_argument('--way', type=int, default=5)
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--step_size', type=int, default=10)
     parser.add_argument('--gamma', type=float, default=0.2)
     parser.add_argument('--temperature', type=float, default=1)
-    parser.add_argument('--model_type', type=str, default='ConvNet', choices=['ConvNet', 'ResNet', 'AmdimNet'])
+    parser.add_argument('--model_type', type=str, default='ConvNet', choices=['ConvNet', 'ResNet'])
     parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
+
     # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
     # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
     # CUB, ConvNet, './saves/initialization/cub/con-pre.pth'
     parser.add_argument('--init_weights', type=str, default=None)
-    parser.add_argument('--save_path', type=str, default=None)
+    parser.add_argument('--save_path', type=str, default='runs')
     parser.add_argument('--gpu', default='0')
-
-    # AMDIM Modelrd
-    parser.add_argument('--ndf', type=int, default=256)
-    parser.add_argument('--rkhs', type=int, default=2048)
-    parser.add_argument('--nd', type=int, default=10)
-
 
     args = parser.parse_args()
     pprint(vars(args))
@@ -49,11 +45,11 @@ if __name__ == '__main__':
 
     if args.dataset == 'MiniImageNet':
         # Handle MiniImageNet
-        from feat.dataloader.mini_imagenet import MiniImageNet as Dataset
+        from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
-        from feat.dataloader.cub import CUB as Dataset
+        from dataloader.cub import CUB as Dataset
     elif args.dataset == 'TieredImageNet':
-        from feat.dataloader.tiered_imagenet import tieredImageNet as Dataset       
+        from dataloader.tiered_imagenet import tieredImageNet as Dataset       
     else:
         raise ValueError('Non-supported Dataset.')
 

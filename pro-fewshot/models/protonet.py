@@ -1,5 +1,5 @@
 import torch.nn as nn
-from feat.utils import euclidean_metric
+from util.metric import euclidean_metric
 
 class ProtoNet(nn.Module):
 
@@ -7,13 +7,13 @@ class ProtoNet(nn.Module):
         super().__init__()
         self.args = args
         if args.model_type == 'ConvNet':
-            from feat.networks.convnet import ConvNet
+            from networks.convnet import ConvNet
             self.encoder = ConvNet()
         elif args.model_type == 'ResNet':
-            from feat.networks.resnet import ResNet
+            from networks.resnet import ResNet
             self.encoder = ResNet()
         elif args.model_type == 'AmdimNet':
-            from feat.networks.amdimnet import AmdimNet
+            from networks.amdimnet import AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
         else:
             raise ValueError('')

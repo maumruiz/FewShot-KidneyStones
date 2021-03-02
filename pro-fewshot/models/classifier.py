@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from feat.utils import euclidean_metric
+from util.metric import euclidean_metric
 import torch.nn.functional as F
     
 class Classifier(nn.Module):
@@ -11,14 +11,14 @@ class Classifier(nn.Module):
         self.args = args
         if args.model_type == 'ConvNet':
             hdim = 64
-            from feat.networks.convnet import ConvNet
+            from networks.convnet import ConvNet
             self.encoder = ConvNet()
         elif args.model_type == 'ResNet':
             hdim = 640
-            from feat.networks.resnet import ResNet as ResNet
+            from networks.resnet import ResNet as ResNet
             self.encoder = ResNet()
         elif args.model_type == 'AmdimNet':
-            from feat.networks.amdimnet import AmdimNet as AmdimNet
+            from networks.amdimnet import AmdimNet as AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
             hdim = args.rkhs
         else:

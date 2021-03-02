@@ -5,9 +5,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from feat.dataloader.samplers import CategoriesSampler
-from feat.models.protonet import ProtoNet
-from feat.utils import pprint, set_gpu, ensure_path, Averager, Timer, count_acc, compute_confidence_interval
+from dataloader.samplers import CategoriesSampler
+from models.protonet import ProtoNet
+from util.utils import pprint, set_gpu, ensure_path, Averager, Timer
+from util.metric import compute_confidence_interval, count_acc
 from tensorboardX import SummaryWriter
 
 
@@ -33,11 +34,11 @@ if __name__ == '__main__':
     set_gpu(args.gpu)
     
     if args.dataset == 'MiniImageNet':
-        from feat.dataloader.mini_imagenet import MiniImageNet as Dataset
+        from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
-        from feat.dataloader.cub import CUB as Dataset
+        from dataloader.cub import CUB as Dataset
     elif args.dataset == 'TieredImageNet':
-        from feat.dataloader.tiered_imagenet import tieredImageNet as Dataset       
+        from dataloader.tiered_imagenet import tieredImageNet as Dataset       
     else:
         raise ValueError('Non-supported Dataset.')
 
