@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import CategoriesSampler
 from models.protonet import ProtoNet
-from util.utils import pprint, set_gpu, ensure_path, Averager, Timer
+from util.utils import pprint, set_gpu, ensure_path, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
 
 
@@ -18,12 +18,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--max_epoch', type=int, default=200)
     parser.add_argument('--way', type=int, default=5)
-    parser.add_argument('--shot', type=int, default=1)
+    parser.add_argument('--shot', type=int, default=5)
     parser.add_argument('--query', type=int, default=15)
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--step_size', type=int, default=10)
-    parser.add_argument('--gamma', type=float, default=0.2)
-    parser.add_argument('--temperature', type=float, default=1)
     parser.add_argument('--model_type', type=str, default='ConvNet', choices=['ConvNet', 'ResNet'])
     parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
 
@@ -33,17 +31,23 @@ if __name__ == '__main__':
     parser.add_argument('--init_weights', type=str, default=None)
     parser.add_argument('--save_path', type=str, default='runs')
     parser.add_argument('--gpu', default='0')
+    parser.add_argument('--seed', default=1234)
 
+
+    _log.info('###### Starting experiment with args: ######')
     args = parser.parse_args()
     pprint(vars(args))
-
     set_gpu(args.gpu)
+    set_seed(args.seed)
+    save_path1 = f'{args.dataset}-{args.model_type}-ProtoNet'
     save_path1 = '-'.join([args.dataset, args.model_type, 'ProtoNet'])
-    save_path2 = '_'.join([str(args.shot), str(args.query), str(args.way), 
-                               str(args.step_size), str(args.gamma), str(args.lr), str(args.temperature)])
+    save_path2 = f'{args.way}way_{args.shot}shot_{args.query}q_{args.lr}lr_{args.step_size}step'
     args.save_path = osp.join(args.save_path, osp.join(save_path1, save_path2))
     ensure_path(args.save_path)  
+    timer = Timer()
+    timer.start()
 
+    print('###### Load data ######')
     if args.dataset == 'MiniImageNet':
         # Handle MiniImageNet
         from dataloader.mini_imagenet import MiniImageNet as Dataset
@@ -62,6 +66,8 @@ if __name__ == '__main__':
     val_sampler = CategoriesSampler(valset.label, 500, args.way, args.shot + args.query)
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
     
+
+    _log.info('###### Create model ######')
     model = ProtoNet(args)
     if args.model_type == 'ConvNet':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -117,7 +123,7 @@ if __name__ == '__main__':
     writer = SummaryWriter(log_dir=args.save_path)
     
     for epoch in range(1, args.max_epoch + 1):
-        lr_scheduler.step()
+        
         model.train()
         tl = Averager()
         ta = Averager()
@@ -205,6 +211,7 @@ if __name__ == '__main__':
         save_model('epoch-last')
 
         print('ETA:{}/{}'.format(timer.measure(), timer.measure(epoch / args.max_epoch)))
+        lr_scheduler.step()
     writer.close()
 
     # Test Phase
@@ -242,3 +249,4 @@ if __name__ == '__main__':
     m, pm = compute_confidence_interval(test_acc_record)
     print('Val Best Acc {:.4f}, Test Acc {:.4f}'.format(trlog['max_acc'], ave_acc.item()))
     print('Test Acc {:.4f} + {:.4f}'.format(m, pm))
+    timer.stop()

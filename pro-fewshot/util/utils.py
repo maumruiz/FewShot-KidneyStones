@@ -16,6 +16,14 @@ def ensure_path(path, remove=True):
     else:
         os.makedirs(path)
 
+def set_seed(seed):
+    """
+    Set the random seed
+    """
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
 class Averager():
 
     def __init__(self):
@@ -29,19 +37,37 @@ class Averager():
     def item(self):
         return self.v
 
-class Timer():
-
+class Timer:
     def __init__(self):
-        self.o = time.time()
+        self._start_time = None
 
-    def measure(self, p=1):
-        x = (time.time() - self.o) / p
-        x = int(x)
-        if x >= 3600:
-            return '{:.1f}h'.format(x / 3600)
-        if x >= 60:
-            return '{}m'.format(round(x / 60))
-        return '{}s'.format(x)
+    def start(self):
+        """Start a new timer"""
+        if self._start_time is not None:
+            raise TimerError(f"Timer is running. Use .stop() to stop it")
+
+        self._start_time = time.perf_counter()
+
+    def stop(self):
+        """Stop the timer, and report the elapsed time"""
+        if self._start_time is None:
+            raise TimerError(f"Timer is not running. Use .start() to start it")
+
+        s = time.perf_counter() - self._start_time
+        self._start_time = None
+
+        m = 0
+        h = 0
+
+        if s > 59:
+            m = seconds / 60
+            s = seconds % 60
+
+        if m > 59:
+            h = m / 60
+            m = m % 60
+
+        print(f"Elapsed time: {h:d}:{m:02d}:{s:02d}")
 
 _utils_pp = pprint.PrettyPrinter()
 def pprint(x):
