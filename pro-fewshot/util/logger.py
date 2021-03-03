@@ -15,7 +15,7 @@ class ExpLogger():
         self.parameters = 0
         self.elapsed_time = ''
     
-    def _to_obj():
+    def _to_obj(self):
         log = {}
         log['args'] = self.args
         log['train_loss'] = self.train_loss

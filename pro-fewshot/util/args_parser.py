@@ -31,7 +31,7 @@ def get_args():
     return parser.parse_args()
 
 def process_args(args):
-    gmt = time.gmtime() 
+    gmt = time.localtime() 
     timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
     save_path1 = f'{args.dataset}-{args.model}-{args.model_type}'
     # save_path2 = f'{args.way}way{args.shot}shot_{args.query}q_{args.lr}lr_{args.step_size}step_{args.gamma}g_{args.temperature}t'
