@@ -13,7 +13,7 @@ from dataloader.samplers import CategoriesSampler
 from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args
-from util.logger import TrainingLogger
+from util.logger import ExpLogger
 
 
 if __name__ == '__main__':
@@ -29,6 +29,9 @@ if __name__ == '__main__':
 
     timer = Timer()
     timer.start()
+
+    explog = ExpLogger(args)
+    writer = SummaryWriter(log_dir=args.save_path)
 
     print('###### Load data ######')
     if args.dataset == 'MiniImageNet':
@@ -74,6 +77,7 @@ if __name__ == '__main__':
     model.load_state_dict(model_dict)    
     model = model.cuda()
 
+    explog.parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     print('###### Set optimizer ######')
     if args.model_type == 'ConvNet':
@@ -88,86 +92,84 @@ if __name__ == '__main__':
     
 
     print('###### Training ######')
-    trlog = TrainingLogger(args)
     global_count = 0
-    writer = SummaryWriter(log_dir=args.save_path)
-    
     for epoch in range(1, args.max_epoch + 1):
         model.train()
-        tl = Averager()
-        ta = Averager()
+        train_loss = Averager()
+        train_acc = Averager()
 
         label = torch.arange(args.way).repeat(args.query)
         label = label.type(torch.cuda.LongTensor)
         
         train_batches = tqdm.tqdm(train_loader)
-        for i, batch in enumerate(train_batches):
-            global_count = global_count + 1
+        for batch in train_batches:
+            global_count += 1
             data, _ = [b.cuda() for b in batch]
             p = args.shot * args.way
             data_shot, data_query = data[:p], data[p:]
+
             logits = model(data_shot, data_query)
             loss = F.cross_entropy(logits, label)
             acc = count_acc(logits, label)
+
             writer.add_scalar('data/loss', float(loss), global_count)
             writer.add_scalar('data/acc', float(acc), global_count)
-            train_batches.set_description(f'epoch {epoch}, loss={loss.item():.4f} acc={acc:.4f}')
+            train_batches.set_description(f'Training | Epoch {epoch} | loss={loss.item():.4f} | acc={acc:.4f} |')
 
-            tl.add(loss.item())
-            ta.add(acc)
+            train_loss.add(loss.item())
+            train_acc.add(acc)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-        tl = tl.item()
-        ta = ta.item()
 
+        ###### Validation step ###########
         model.eval()
 
-        vl = Averager()
-        va = Averager()
+        val_loss = Averager()
+        val_acc = Averager()
 
         label = torch.arange(args.way).repeat(args.query)
         label = label.type(torch.cuda.LongTensor)
-            
         
         with torch.no_grad():
-            for i, batch in enumerate(val_loader, 1):
-                data, _ = [_.cuda() for _ in batch]
+            val_batches = tqdm.tqdm(val_loader)
+            for batch in val_batches:
+                data, _ = [b.cuda() for b in batch]
                 p = args.shot * args.way
                 data_shot, data_query = data[:p], data[p:]
     
                 logits = model(data_shot, data_query)
                 loss = F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)    
-                vl.add(loss.item())
-                va.add(acc)
+                val_loss.add(loss.item())
+                val_acc.add(acc)
+                val_batches.set_description(f'Validation | Epoch {epoch} | loss={val_loss.item():.4f} | acc={val_acc.item():.4f} |')
 
-        vl = vl.item()
-        va = va.item()
-        writer.add_scalar('data/val_loss', float(vl), epoch)
-        writer.add_scalar('data/val_acc', float(va), epoch)        
-        print('epoch {}, val, loss={:.4f} acc={:.4f}'.format(epoch, vl, va))
+        val_loss = val_loss.item()
+        val_acc = val_acc.item()
+        writer.add_scalar('data/val_loss', float(val_loss), epoch)
+        writer.add_scalar('data/val_acc', float(val_acc), epoch)        
 
-        if va > trlog.max_acc:
-            trlog.max_acc = va
-            trlog.max_acc_epoch = epoch
+        if val_acc > explog.max_acc:
+            explog.max_acc = val_acc
+            explog.max_acc_epoch = epoch
             torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
 
-        trlog.train_loss.append(tl)
-        trlog.train_acc.append(ta)
-        trlog.val_loss.append(vl)
-        trlog.val_acc.append(va)
+        explog.train_loss.append(train_loss.item())
+        explog.train_acc.append(train_acc.item())
+        explog.val_loss.append(val_loss)
+        explog.val_acc.append(val_acc)
 
-        print(f'Best epoch: {trlog.max_acc_epoch} | Best val acc={trlog.max_acc:.4f}')
+        print(f'Best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f}')
 
-        trlog.save(args.save_path)
+        explog.save(args.save_path)
         torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
 
         lr_scheduler.step()
     writer.close()
-    trlog.save_json(args.save_path)
+    explog.save_json(args.save_path)
 
 
     print('###### Testing ######')
@@ -184,7 +186,8 @@ if __name__ == '__main__':
     label = label.type(torch.cuda.LongTensor)
         
     with torch.no_grad():
-        for i, batch in enumerate(loader, 1):
+        test_batches = tqdm.tqdm(loader)
+        for i, batch in enumerate(test_batches, 1):
             data, _ = [b.cuda() for b in batch]
             k = args.way * args.shot
             data_shot, data_query = data[:k], data[k:]
@@ -193,9 +196,15 @@ if __name__ == '__main__':
             acc = count_acc(logits, label)
             ave_acc.add(acc)
             test_acc_record[i-1] = acc
-            print('batch {}: {:.2f}({:.2f})'.format(i, ave_acc.item() * 100, acc * 100))
+            test_batches.set_description(f'Testing | Acc={acc * 100} | Avg acc={ave_acc.item() * 100} |')
         
     m, pm = compute_confidence_interval(test_acc_record)
-    print(f'Val Best Acc: {trlog.max_acc:.4f} | Test Acc {ave_acc.item():.4f}')
     print(f'Test Acc {m:.4f} + {pm:.4f}')
-    timer.stop()
+    elapsed_time = timer.stop()
+    explog.elapsed_time = elapsed_time
+
+    print('###### Saving logs ######')
+    explog.save(args.save_path)
+    explog.save_json(args.save_path)
+
+    print(f"Elapsed time: {elapsed_time}")

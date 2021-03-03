@@ -6,7 +6,6 @@ import torch
 
 def set_gpu(x):
     os.environ['CUDA_VISIBLE_DEVICES'] = x
-    print('using gpu:', x)
 
 def ensure_path(path, remove=True):
     if os.path.exists(path):
@@ -69,4 +68,5 @@ class Timer:
             h = m // 60
             m = m % 60
 
-        print(f"Elapsed time: {h:d}:{m:02d}:{s:02d}")
+        # print(f"Elapsed time: {h:d}:{m:02d}:{s:02d}")
+        return f'{h:d}:{m:02d}:{s:02d}'
