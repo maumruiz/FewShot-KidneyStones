@@ -16,7 +16,7 @@ class ProtoNet(nn.Module):
             from networks.amdimnet import AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
         else:
-            raise ValueError('')
+            raise ValueError('Encoder doesnt exist')
 
     def forward(self, data_shot, data_query):
         proto = self.encoder(data_shot)
