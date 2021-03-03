@@ -13,6 +13,7 @@ from dataloader.samplers import CategoriesSampler
 from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args
+from util.logger import TrainingLogger
 
 
 if __name__ == '__main__':
@@ -88,15 +89,8 @@ if __name__ == '__main__':
     def save_model(name):
         torch.save(dict(params=model.state_dict()), osp.join(args.save_path, name + '.pth'))
     
-    trlog = {}
-    trlog['args'] = vars(args)
-    trlog['train_loss'] = []
-    trlog['val_loss'] = []
-    trlog['train_acc'] = []
-    trlog['val_acc'] = []
-    trlog['max_acc'] = 0.0
-    trlog['max_acc_epoch'] = 0
-
+    trlog = TrainingLogger(args)
+    
     global_count = 0
     writer = SummaryWriter(log_dir=args.save_path)
     
@@ -111,7 +105,6 @@ if __name__ == '__main__':
         
         train_batches = tqdm.tqdm(train_loader)
         for i, batch in enumerate(train_batches):
-        # for i, batch in enumerate(train_loader, 1):
             global_count = global_count + 1
             data, _ = [b.cuda() for b in batch]
             p = args.shot * args.way
@@ -141,7 +134,7 @@ if __name__ == '__main__':
         label = torch.arange(args.way).repeat(args.query)
         label = label.type(torch.cuda.LongTensor)
             
-        print('best epoch {}, best val acc={:.4f}'.format(trlog['max_acc_epoch'], trlog['max_acc']))
+        
         with torch.no_grad():
             for i, batch in enumerate(val_loader, 1):
                 data, _ = [_.cuda() for _ in batch]
@@ -160,25 +153,26 @@ if __name__ == '__main__':
         writer.add_scalar('data/val_acc', float(va), epoch)        
         print('epoch {}, val, loss={:.4f} acc={:.4f}'.format(epoch, vl, va))
 
-        if va > trlog['max_acc']:
-            trlog['max_acc'] = va
-            trlog['max_acc_epoch'] = epoch
+        if va > trlog.max_acc:
+            trlog.max_acc = va
+            trlog.max_acc_epoch = epoch
             save_model('max_acc')
 
-        trlog['train_loss'].append(tl)
-        trlog['train_acc'].append(ta)
-        trlog['val_loss'].append(vl)
-        trlog['val_acc'].append(va)
+        trlog.train_loss.append(tl)
+        trlog.train_acc.append(ta)
+        trlog.val_loss.append(vl)
+        trlog.val_acc.append(va)
 
-        torch.save(trlog, osp.join(args.save_path, 'trlog'))
+        print(f'Best epoch: {trlog.max_acc_epoch} | Best val acc={trlog.max_acc:.4f}')
 
+        trlog.save(args.save_path)
         save_model('epoch-last')
 
         lr_scheduler.step()
     writer.close()
+    trlog.save_json(args.save_path)
 
-    # Test Phase
-    trlog = torch.load(osp.join(args.save_path, 'trlog'))
+    
     test_set = Dataset('test', args)
     sampler = CategoriesSampler(test_set.label, args.test_epi, args.way, args.shot + args.query)
     loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)
@@ -204,6 +198,6 @@ if __name__ == '__main__':
             print('batch {}: {:.2f}({:.2f})'.format(i, ave_acc.item() * 100, acc * 100))
         
     m, pm = compute_confidence_interval(test_acc_record)
-    print('Val Best Acc {:.4f}, Test Acc {:.4f}'.format(trlog['max_acc'], ave_acc.item()))
-    print('Test Acc {:.4f} + {:.4f}'.format(m, pm))
+    print(f'Val Best Acc: {trlog.max_acc:.4f} | Test Acc {ave_acc.item():.4f}')
+    print(f'Test Acc {m:.4f} + {pm:.4f}')
     timer.stop()
