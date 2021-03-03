@@ -1,7 +1,6 @@
 import os
 import shutil
 import time
-import pprint
 import random
 import torch
 
@@ -71,7 +70,3 @@ class Timer:
             m = m % 60
 
         print(f"Elapsed time: {h:d}:{m:02d}:{s:02d}")
-
-_utils_pp = pprint.PrettyPrinter()
-def pprint(x):
-    _utils_pp.pprint(x)

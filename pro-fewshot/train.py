@@ -1,4 +1,3 @@
-import argparse
 import os.path as osp
 
 import tqdm
@@ -10,49 +9,25 @@ from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import CategoriesSampler
 from models.protonet import ProtoNet
-from util.utils import pprint, set_gpu, ensure_path, Averager, Timer, set_seed
+from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
+from util.args_parser import get_args, process_args, print_args
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--max_epoch', type=int, default=200)
-    parser.add_argument('--train_epi', type=int, default=100)
-    parser.add_argument('--val_epi', type=int, default=500)
-    parser.add_argument('--test_epi', type=int, default=10000)
-    parser.add_argument('--way', type=int, default=5)
-    parser.add_argument('--shot', type=int, default=5)
-    parser.add_argument('--query', type=int, default=15)
-    parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--step_size', type=int, default=10)
-    parser.add_argument('--gamma', type=float, default=0.2)
-    parser.add_argument('--temperature', type=float, default=1)
-    parser.add_argument('--model_type', type=str, default='ConvNet', choices=['ConvNet', 'ResNet'])
-    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
-
-    # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
-    # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
-    # CUB, ConvNet, './saves/initialization/cub/con-pre.pth'
-    parser.add_argument('--init_weights', type=str, default=None)
-    parser.add_argument('--save_path', type=str, default='runs')
-    parser.add_argument('--gpu', default='0')
-    parser.add_argument('--seed', default=1234)
-
-
+    
     print('###### Starting experiment with args: ######')
-    args = parser.parse_args()
-    pprint(vars(args))
-    set_gpu(args.gpu)
+    args = get_args()
+    process_args(args)
+    print_args(args)
+
     set_seed(args.seed)
-    save_path1 = f'{args.dataset}-{args.model_type}-ProtoNet'
-    save_path1 = '-'.join([args.dataset, args.model_type, 'ProtoNet'])
-    save_path2 = f'{args.way}way{args.shot}shot_{args.query}q_{args.lr}lr_{args.step_size}step_{args.gamma}g_{args.temperature}t'
-    args.save_path = osp.join(args.save_path, osp.join(save_path1, save_path2))
-    ensure_path(args.save_path)  
+    set_gpu(args.gpu)
+
     timer = Timer()
     timer.start()
 
-    print('###### Load data ######')
+    print('###### Loading data ######')
     if args.dataset == 'MiniImageNet':
         from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
@@ -71,7 +46,7 @@ if __name__ == '__main__':
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
     
 
-    print('###### Create model ######')
+    print('###### Creating model ######')
     model = ProtoNet(args)
     if args.model_type == 'ConvNet':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -84,7 +59,6 @@ if __name__ == '__main__':
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)        
     
     # load pre-trained model (no FC weights)
-
     model_dict = model.state_dict()
 
     if args.init_weights is not None:
@@ -98,10 +72,7 @@ if __name__ == '__main__':
             model_dict.update(pretrained_dict)
         else:
             pretrained_dict = model_detail['model']
-            #print(model_dict.keys())
-            #print(pretrained_dict.keys())
             pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}
-            #print(pretrained_dict.keys())
 
             model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)    

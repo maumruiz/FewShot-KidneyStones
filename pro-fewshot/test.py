@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from dataloader.samplers import CategoriesSampler
 from models.protonet import ProtoNet
-from util.utils import pprint, set_gpu, ensure_path, Averager, Timer
+from util.utils import set_gpu, ensure_path, Averager, Timer
 from util.metric import compute_confidence_interval, count_acc
 from torch.utils.tensorboard import SummaryWriter
 
@@ -29,7 +29,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.temperature = 1 # we set temperature = 1 during test since it does not influence the results
-    pprint(vars(args))
 
     set_gpu(args.gpu)
     
