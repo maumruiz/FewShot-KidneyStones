@@ -18,7 +18,7 @@ from util.logger import TrainingLogger
 
 if __name__ == '__main__':
     
-    print('###### Starting experiment with args: ######')
+    print('###### Start experiment with args: ######')
     args = get_args()
     process_args(args)
     print_args(args)
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     timer = Timer()
     timer.start()
 
-    print('###### Loading data ######')
+    print('###### Load data ######')
     if args.dataset == 'MiniImageNet':
         from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
@@ -49,27 +49,15 @@ if __name__ == '__main__':
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
     
 
-    print('###### Creating model ######')
-
+    print('###### Create model ######')
     if args.model == 'ProtoNet':
         from models.protonet import ProtoNet as Model
     else:
         raise ValueError('Non-supported Model.')
-    model = Model(args)
-
-    if args.model_type == 'ConvNet':
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    elif args.model_type == 'ResNet':
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-    elif args.model_type == 'AmdimNet':
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-    else:
-        raise ValueError('No Such Encoder')
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)        
+    model = Model(args)      
     
     # load pre-trained model (no FC weights)
     model_dict = model.state_dict()
-
     if args.init_weights is not None:
         model_detail = torch.load(args.init_weights)
         if 'params' in model_detail:
@@ -85,17 +73,26 @@ if __name__ == '__main__':
         model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)    
     model = model.cuda()
+
+
+    print('###### Set optimizer ######')
+    if args.model_type == 'ConvNet':
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    elif args.model_type == 'ResNet':
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
+    elif args.model_type == 'AmdimNet':
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
+    else:
+        raise ValueError('No Such Encoder')
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)  
     
-    def save_model(name):
-        torch.save(dict(params=model.state_dict()), osp.join(args.save_path, name + '.pth'))
-    
+
+    print('###### Training ######')
     trlog = TrainingLogger(args)
-    
     global_count = 0
     writer = SummaryWriter(log_dir=args.save_path)
     
     for epoch in range(1, args.max_epoch + 1):
-        
         model.train()
         tl = Averager()
         ta = Averager()
@@ -156,7 +153,7 @@ if __name__ == '__main__':
         if va > trlog.max_acc:
             trlog.max_acc = va
             trlog.max_acc_epoch = epoch
-            save_model('max_acc')
+            torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
 
         trlog.train_loss.append(tl)
         trlog.train_acc.append(ta)
@@ -166,13 +163,14 @@ if __name__ == '__main__':
         print(f'Best epoch: {trlog.max_acc_epoch} | Best val acc={trlog.max_acc:.4f}')
 
         trlog.save(args.save_path)
-        save_model('epoch-last')
+        torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
 
         lr_scheduler.step()
     writer.close()
     trlog.save_json(args.save_path)
 
-    
+
+    print('###### Testing ######')
     test_set = Dataset('test', args)
     sampler = CategoriesSampler(test_set.label, args.test_epi, args.way, args.shot + args.query)
     loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)

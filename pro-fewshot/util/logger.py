@@ -37,6 +37,6 @@ class TrainingLogger():
         trobj['max_acc'] = self.max_acc
         trobj['max_acc_epoch'] = self.max_acc_epoch
 
-        with open(osp.join(path, 'trlog.json'), "w") as write_file:
+        with open(osp.join(path, 'experiment.json'), "w") as write_file:
             json.dump(trobj, write_file, indent=4)
 
