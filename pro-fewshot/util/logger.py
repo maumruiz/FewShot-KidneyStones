@@ -1,6 +1,7 @@
 import os.path as osp
 import json
 import torch
+import pandas as pd
 
 class ExpLogger():
     def __init__(self, args):
@@ -12,7 +13,7 @@ class ExpLogger():
         self.max_acc = 0.0
         self.max_acc_epoch = 0
         self.test_acc = []
-        self.mean_acc = ''
+        self.mean_acc = 0.0
         self.parameters = 0
         self.elapsed_time = ''
     
@@ -20,8 +21,8 @@ class ExpLogger():
         log = {}
         log['args'] = self.args
         log['train_loss'] = self.train_loss
-        log['val_loss'] = self.val_loss
         log['train_acc'] = self.train_acc
+        log['val_loss'] = self.val_loss
         log['val_acc'] = self.val_acc
         log['max_acc'] = self.max_acc
         log['max_acc_epoch'] = self.max_acc_epoch
@@ -40,4 +41,42 @@ class ExpLogger():
 
         with open(osp.join(path, 'experiment.json'), "w") as write_file:
             json.dump(log, write_file, indent=4)
+
+    def save_csv(self, path, which='all'):
+        trainval_df = pd.DataFrame()
+        trainval_df['epoch'] = [e+1 for e in range(len(self.train_loss))]
+        trainval_df['train_loss'] = self.train_loss
+        trainval_df['train_acc'] = self.train_acc
+        trainval_df['val_loss'] = self.val_loss
+        trainval_df['val_acc'] = self.val_acc
+        trainval_df.to_csv(osp.join(path, 'trainval.csv'))
+
+        test_df = pd.DataFrame()
+        test_df['batch'] = [e+1 for e in range(len(self.test_acc))]
+        test_df['acc'] = self.test_acc
+        test_df.to_csv(osp.join(path, 'test.csv'))
+
+        results_df = pd.DataFrame()
+        results_df['name'] = f'{self.args.dataset}-{self.args.model}-{self.args.model_type}'
+        results_df['details'] = self.args.details
+        results_df['way'] = self.args.way
+        results_df['shot'] = self.args.shot
+        results_df['queries'] = self.args.query
+        results_df['max_val_acc'] = self.max_acc
+        results_df['test_acc'] = self.mean_acc
+        results_df['num_parameters'] = self.parameters
+        results_df['elapsed_time'] = self.elapsed_time
+        results_df['train_epochs'] = self.args.max_epoch
+        results_df['train_episodes'] = self.args.train_epi
+        results_df['val_episodes'] = self.args.val_epi
+        results_df['test_episodes'] = self.args.test_epi
+        results_df['lr'] = self.args.lr
+        results_df['step_size'] = self.args.step_size
+        results_df['gamma'] = self.args.gamma
+        results_df['temperature'] = self.args.temperature
+        results_df['init_weights'] = self.args.init_weights
+        results_df['save_path'] = self.args.save_path
+        results_df['seed'] = self.args.seed
+        results_df.to_csv(osp.join(path, 'results.csv'))
+
 

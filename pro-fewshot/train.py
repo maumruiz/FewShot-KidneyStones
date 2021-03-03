@@ -204,12 +204,13 @@ if __name__ == '__main__':
     m, pm = compute_confidence_interval(test_acc_record)
     print(f'Test Acc {m:.4f} + {pm:.4f}')
     explog.mean_acc = m
-    
+
     elapsed_time = timer.stop()
     explog.elapsed_time = elapsed_time
 
     print('###### Saving logs ######')
     explog.save(args.save_path)
     explog.save_json(args.save_path)
+    explog.save_csv(args.save_path)
 
     print(f"Elapsed time: {elapsed_time}")

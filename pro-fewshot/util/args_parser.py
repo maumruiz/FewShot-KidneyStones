@@ -19,6 +19,7 @@ def get_args():
     parser.add_argument('--step_size', type=int, default=10)
     parser.add_argument('--gamma', type=float, default=0.2)
     parser.add_argument('--temperature', type=float, default=1)
+    parser.add_argument('--details', type=str, default='')
 
     # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
     # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
