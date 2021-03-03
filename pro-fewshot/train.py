@@ -107,19 +107,13 @@ if __name__ == '__main__':
         ta = Averager()
 
         label = torch.arange(args.way).repeat(args.query)
-        if torch.cuda.is_available():
-            label = label.type(torch.cuda.LongTensor)
-        else:
-            label = label.type(torch.LongTensor)
+        label = label.type(torch.cuda.LongTensor)
         
         train_batches = tqdm.tqdm(train_loader)
         for i, batch in enumerate(train_batches):
         # for i, batch in enumerate(train_loader, 1):
             global_count = global_count + 1
-            if torch.cuda.is_available():
-                data, _ = [_.cuda() for _ in batch]
-            else:
-                data = batch[0]
+            data, _ = [b.cuda() for b in batch]
             p = args.shot * args.way
             data_shot, data_query = data[:p], data[p:]
             logits = model(data_shot, data_query)
@@ -145,18 +139,12 @@ if __name__ == '__main__':
         va = Averager()
 
         label = torch.arange(args.way).repeat(args.query)
-        if torch.cuda.is_available():
-            label = label.type(torch.cuda.LongTensor)
-        else:
-            label = label.type(torch.LongTensor)
+        label = label.type(torch.cuda.LongTensor)
             
         print('best epoch {}, best val acc={:.4f}'.format(trlog['max_acc_epoch'], trlog['max_acc']))
         with torch.no_grad():
             for i, batch in enumerate(val_loader, 1):
-                if torch.cuda.is_available():
-                    data, _ = [_.cuda() for _ in batch]
-                else:
-                    data = batch[0]
+                data, _ = [_.cuda() for _ in batch]
                 p = args.shot * args.way
                 data_shot, data_query = data[:p], data[p:]
     
@@ -201,17 +189,11 @@ if __name__ == '__main__':
 
     ave_acc = Averager()
     label = torch.arange(args.way).repeat(args.query)
-    if torch.cuda.is_available():
-        label = label.type(torch.cuda.LongTensor)
-    else:
-        label = label.type(torch.LongTensor)
+    label = label.type(torch.cuda.LongTensor)
         
     with torch.no_grad():
         for i, batch in enumerate(loader, 1):
-            if torch.cuda.is_available():
-                data, _ = [_.cuda() for _ in batch]
-            else:
-                data = batch[0]
+            data, _ = [b.cuda() for b in batch]
             k = args.way * args.shot
             data_shot, data_query = data[:k], data[k:]
     
