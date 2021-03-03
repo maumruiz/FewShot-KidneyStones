@@ -2,13 +2,14 @@ import os.path as osp
 
 import tqdm
 import numpy as np
+
 import torch
 import torch.nn.functional as F
+import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import CategoriesSampler
-from models.protonet import ProtoNet
 from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args
@@ -23,6 +24,7 @@ if __name__ == '__main__':
 
     set_seed(args.seed)
     set_gpu(args.gpu)
+    cudnn.benchmark = True
 
     timer = Timer()
     timer.start()
@@ -47,7 +49,13 @@ if __name__ == '__main__':
     
 
     print('###### Creating model ######')
-    model = ProtoNet(args)
+
+    if args.model == 'ProtoNet':
+        from models.protonet import ProtoNet as Model
+    else:
+        raise ValueError('Non-supported Model.')
+    model = Model(args)
+
     if args.model_type == 'ConvNet':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     elif args.model_type == 'ResNet':
@@ -68,18 +76,14 @@ if __name__ == '__main__':
             # remove weights for FC
             pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
             pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+            print('Pretrained dict keys:')
             print(pretrained_dict.keys())
-            model_dict.update(pretrained_dict)
         else:
             pretrained_dict = model_detail['model']
             pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}
-
-            model_dict.update(pretrained_dict)
+        model_dict.update(pretrained_dict)
     model.load_state_dict(model_dict)    
-    
-    if torch.cuda.is_available():
-        torch.backends.cudnn.benchmark = True
-        model = model.cuda()
+    model = model.cuda()
     
     def save_model(name):
         torch.save(dict(params=model.state_dict()), osp.join(args.save_path, name + '.pth'))
