@@ -12,6 +12,7 @@ class ExpLogger():
         self.max_acc = 0.0
         self.max_acc_epoch = 0
         self.test_acc = []
+        self.mean_acc = ''
         self.parameters = 0
         self.elapsed_time = ''
     
@@ -25,6 +26,7 @@ class ExpLogger():
         log['max_acc'] = self.max_acc
         log['max_acc_epoch'] = self.max_acc_epoch
         log['test_acc'] = self.test_acc
+        log['mean_acc'] = self.mean_acc
         log['parameters'] = self.parameters
         log['elapsed_time'] = self.elapsed_time
         return log

@@ -194,12 +194,17 @@ if __name__ == '__main__':
     
             logits = model(data_shot, data_query)
             acc = count_acc(logits, label)
+
             ave_acc.add(acc)
             test_acc_record[i-1] = acc
+            explog.test_acc.append(acc)
+
             test_batches.set_description(f'Testing | Acc={acc * 100} | Avg acc={ave_acc.item() * 100} |')
         
     m, pm = compute_confidence_interval(test_acc_record)
     print(f'Test Acc {m:.4f} + {pm:.4f}')
+    explog.mean_acc = m
+    
     elapsed_time = timer.stop()
     explog.elapsed_time = elapsed_time
 
