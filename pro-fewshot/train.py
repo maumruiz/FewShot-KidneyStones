@@ -17,6 +17,9 @@ from util.metric import compute_confidence_interval, count_acc
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--max_epoch', type=int, default=200)
+    parser.add_argument('--train_epi', type=int, default=100)
+    parser.add_argument('--val_epi', type=int, default=500)
+    parser.add_argument('--test_epi', type=int, default=10000)
     parser.add_argument('--way', type=int, default=5)
     parser.add_argument('--shot', type=int, default=5)
     parser.add_argument('--query', type=int, default=15)
@@ -51,7 +54,6 @@ if __name__ == '__main__':
 
     print('###### Load data ######')
     if args.dataset == 'MiniImageNet':
-        # Handle MiniImageNet
         from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
         from dataloader.cub import CUB as Dataset
@@ -61,11 +63,11 @@ if __name__ == '__main__':
         raise ValueError('Non-supported Dataset.')
 
     trainset = Dataset('train', args)
-    train_sampler = CategoriesSampler(trainset.label, 100, args.way, args.shot + args.query)
+    train_sampler = CategoriesSampler(trainset.label, args.train_epi, args.way, args.shot + args.query)
     train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=8, pin_memory=True)
 
     valset = Dataset('val', args)
-    val_sampler = CategoriesSampler(valset.label, 500, args.way, args.shot + args.query)
+    val_sampler = CategoriesSampler(valset.label, args.val_epi, args.way, args.shot + args.query)
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
     
 
@@ -215,9 +217,9 @@ if __name__ == '__main__':
     # Test Phase
     trlog = torch.load(osp.join(args.save_path, 'trlog'))
     test_set = Dataset('test', args)
-    sampler = CategoriesSampler(test_set.label, 10000, args.way, args.shot + args.query)
+    sampler = CategoriesSampler(test_set.label, args.test_epi, args.way, args.shot + args.query)
     loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)
-    test_acc_record = np.zeros((10000,))
+    test_acc_record = np.zeros((args.test_epi,))
 
     model.load_state_dict(torch.load(osp.join(args.save_path, 'max_acc' + '.pth'))['params'])
     model.eval()
