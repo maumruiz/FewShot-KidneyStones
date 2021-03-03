@@ -14,7 +14,7 @@ def get_args():
     parser.add_argument('--max_epoch', type=int, default=200)
     parser.add_argument('--train_epi', type=int, default=100)
     parser.add_argument('--val_epi', type=int, default=500)
-    parser.add_argument('--test_epi', type=int, default=10000)
+    parser.add_argument('--test_epi', type=int, default=1000)
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--step_size', type=int, default=10)
     parser.add_argument('--gamma', type=float, default=0.2)
