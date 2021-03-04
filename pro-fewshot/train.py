@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from dataloader.samplers import CategoriesSampler
+from dataloader.samplers import FewShotSampler
 from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args
@@ -44,11 +44,11 @@ if __name__ == '__main__':
         raise ValueError('Non-supported Dataset.')
 
     trainset = Dataset('train', args)
-    train_sampler = CategoriesSampler(trainset.label, args.train_epi, args.way, args.shot + args.query)
+    train_sampler = FewShotSampler(trainset.label, args.train_epi, args.way, args.shot, args.query)
     train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=8, pin_memory=True)
 
     valset = Dataset('val', args)
-    val_sampler = CategoriesSampler(valset.label, args.val_epi, args.way, args.shot + args.query)
+    val_sampler = FewShotSampler(valset.label, args.val_epi, args.way, args.shot, args.query)
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
     
 
@@ -93,22 +93,18 @@ if __name__ == '__main__':
 
     print('###### Training ######')
     global_count = 0
+    label = torch.arange(0, args.way, 1 / args.query).long()
+    label = label.cuda()
     for epoch in range(1, args.max_epoch + 1):
         model.train()
         train_loss = Averager()
         train_acc = Averager()
 
-        label = torch.arange(args.way).repeat(args.query)
-        label = label.type(torch.cuda.LongTensor)
-        
         train_batches = tqdm.tqdm(train_loader)
         for batch in train_batches:
             global_count += 1
             data, _ = [b.cuda() for b in batch]
-            p = args.shot * args.way
-            data_shot, data_query = data[:p], data[p:]
-
-            logits = model(data_shot, data_query)
+            logits = model(data)
             loss = F.cross_entropy(logits, label)
             acc = count_acc(logits, label)
 
@@ -129,18 +125,12 @@ if __name__ == '__main__':
 
         val_loss = Averager()
         val_acc = Averager()
-
-        label = torch.arange(args.way).repeat(args.query)
-        label = label.type(torch.cuda.LongTensor)
         
         with torch.no_grad():
             val_batches = tqdm.tqdm(val_loader)
             for batch in val_batches:
                 data, _ = [b.cuda() for b in batch]
-                p = args.shot * args.way
-                data_shot, data_query = data[:p], data[p:]
-    
-                logits = model(data_shot, data_query)
+                logits = model(data)
                 loss = F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)    
                 val_loss.add(loss.item())
@@ -168,13 +158,14 @@ if __name__ == '__main__':
         torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
 
         lr_scheduler.step()
+        
     writer.close()
     explog.save_json(args.save_path)
 
 
     print('###### Testing ######')
     test_set = Dataset('test', args)
-    sampler = CategoriesSampler(test_set.label, args.test_epi, args.way, args.shot + args.query)
+    sampler = FewShotSampler(test_set.label, args.test_epi, args.way, args.shot, args.query)
     loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)
     test_acc_record = np.zeros((args.test_epi,))
 
@@ -182,19 +173,13 @@ if __name__ == '__main__':
     model.eval()
 
     ave_acc = Averager()
-    label = torch.arange(args.way).repeat(args.query)
-    label = label.type(torch.cuda.LongTensor)
-        
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader)
         for i, batch in enumerate(test_batches, 1):
             data, _ = [b.cuda() for b in batch]
-            k = args.way * args.shot
-            data_shot, data_query = data[:k], data[k:]
-    
-            logits = model(data_shot, data_query)
+            logits = model(data)
             acc = count_acc(logits, label)
-
+            
             ave_acc.add(acc)
             test_acc_record[i-1] = acc
             explog.test_acc.append(acc)
