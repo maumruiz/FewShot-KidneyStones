@@ -1,13 +1,18 @@
 import torch
 import numpy as np
 
-def euclidean_metric(a, b):
-    n = a.shape[0]
-    m = b.shape[0]
-    a = a.unsqueeze(1).expand(n, m, -1)
-    b = b.unsqueeze(0).expand(n, m, -1)
-    logits = -((a - b)**2).sum(dim=2)
-    return logits
+def euclidean_dist(x, y):
+    n = x.shape[0]
+    m = y.shape[0]
+    d = x.shape[1]
+    assert d == y.shape[1]
+
+    x = x.unsqueeze(1).expand(n, m, d)
+    y = y.unsqueeze(0).expand(n, m, d)
+
+    # logits = -((x - y)**2).sum(dim=2)
+    dist = torch.pow(x - y, 2).sum(2)
+    return dist
 
 def compute_confidence_interval(data):
     """
@@ -23,7 +28,4 @@ def compute_confidence_interval(data):
 
 def count_acc(logits, label):
     pred = torch.argmax(logits, dim=1)
-    if torch.cuda.is_available():
-        return (pred == label).type(torch.cuda.FloatTensor).mean().item()
-    else:
-        return (pred == label).type(torch.FloatTensor).mean().item()
+    return (pred == label).type(torch.cuda.FloatTensor).mean().item()

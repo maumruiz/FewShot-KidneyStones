@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from util.metric import euclidean_metric
+from util.metric import euclidean_dist
 import torch.nn.functional as F
     
 class Classifier(nn.Module):
@@ -39,5 +39,5 @@ class Classifier(nn.Module):
         proto = proto.reshape(self.args.shot, way, -1).mean(dim=0)
         
         query = self.encoder(data_query)
-        logits = euclidean_metric(query, proto)
+        logits = euclidean_dist(query, proto)
         return logits
