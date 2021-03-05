@@ -193,6 +193,7 @@ if __name__ == '__main__':
     elapsed_time = timer.stop()
     explog.elapsed_time = elapsed_time
 
+    print('sadf')
     print('###### Saving logs ######')
     explog.save(args.save_path)
     explog.save_json(args.save_path)
