@@ -162,7 +162,7 @@ if __name__ == '__main__':
     writer.close()
     explog.save_json(args.save_path)
 
-
+    print('sometingsd')
     print('###### Testing ######')
     test_set = Dataset('test', args)
     sampler = FewShotSampler(test_set.label, args.test_epi, args.way, args.shot, args.query)
