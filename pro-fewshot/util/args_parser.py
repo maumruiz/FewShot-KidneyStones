@@ -20,9 +20,9 @@ def get_args():
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
     parser.add_argument('--train_way', type=int, default=5)
-
     parser.add_argument('--details', type=str, default='')
     parser.add_argument('--exp_num', type=int, default=1)
+    parser.add_argument('--save_features', action='store_true')
 
     # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
     # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
