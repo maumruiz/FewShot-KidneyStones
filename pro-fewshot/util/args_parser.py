@@ -15,9 +15,9 @@ def get_args():
     parser.add_argument('--train_epi', type=int, default=100)
     parser.add_argument('--val_epi', type=int, default=500)
     parser.add_argument('--test_epi', type=int, default=1000)
-    parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--step_size', type=int, default=10)
-    parser.add_argument('--gamma', type=float, default=0.2)
+    parser.add_argument('--lr', type=float, default=0.001)
+    parser.add_argument('--step_size', type=int, default=20)
+    parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
     parser.add_argument('--details', type=str, default='')
 
@@ -26,7 +26,7 @@ def get_args():
     # CUB, ConvNet, './saves/initialization/cub/con-pre.pth'
     parser.add_argument('--init_weights', type=str, default=None)
     parser.add_argument('--save_path', type=str, default='runs')
-    parser.add_argument('--gpu', default='0')
+    parser.add_argument('--gpu', type=str, default='6')
     parser.add_argument('--seed', default=1234)
 
     return parser.parse_args()

@@ -152,7 +152,7 @@ if __name__ == '__main__':
         explog.val_loss.append(val_loss)
         explog.val_acc.append(val_acc)
 
-        print(f'Best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f}')
+        print(f'########## Best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f} ##########')
 
         explog.save(args.save_path)
         torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))

@@ -25,6 +25,10 @@ class ProtoNet(nn.Module):
         supp_fts = embeddings[:self.args.way*self.args.shot]
         query_fts = embeddings[self.args.way*self.args.shot:]
 
+        # Flatten the features
+        supp_fts = supp_fts.reshape(self.args.shot*self.args.way, -1)
+        query_fts = query_fts.reshape(self.args.query*self.args.way, -1)
+
         # proto = supp_fts.reshape(self.args.way, self.args.shot, -1).mean(dim=1)
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
 
