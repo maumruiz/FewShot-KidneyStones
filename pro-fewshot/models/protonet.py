@@ -33,6 +33,8 @@ class ProtoNet(nn.Module):
         supp_fts = nn.AvgPool2d(n_dim)(supp_fts).reshape(n_supp, -1)
         query_fts = nn.AvgPool2d(n_dim)(query_fts).reshape(n_qry, -1)
 
+        # Here we can save the features to later visualization
+
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
 
         logits = -euclidean_dist(query_fts, prototypes) / self.args.temperature

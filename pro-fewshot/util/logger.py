@@ -58,12 +58,13 @@ class ExpLogger():
 
         
         results_df = pd.DataFrame()
-        results_df['exp_num'] = [self.args.exp_num]
+        results_df['exp_num'] = [self.args['exp_num']]
         results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['backbone']}"]
         results_df['details'] = [self.args['details']]
         results_df['way'] = [self.args['way']]
         results_df['shot'] = [self.args['shot']]
         results_df['queries'] = [self.args['query']]
+        results_df['train_way'] = [self.args['train_way']]
         results_df['max_val_acc'] = [self.max_acc]
         results_df['test_acc'] = [self.mean_acc]
         results_df['num_parameters'] = [self.parameters]
@@ -72,13 +73,14 @@ class ExpLogger():
         results_df['train_episodes'] = [self.args['train_epi']]
         results_df['val_episodes'] = [self.args['val_epi']]
         results_df['test_episodes'] = [self.args['test_epi']]
+        results_df['init_weights'] = [self.args['init_weights']]
+        results_df['save_path'] = [self.args['save_path']]
+        results_df['seed'] = [self.args['seed']]
         results_df['lr'] = [self.args['lr']]
         results_df['step_size'] = [self.args['step_size']]
         results_df['gamma'] = [self.args['gamma']]
         results_df['temperature'] = [self.args['temperature']]
-        results_df['init_weights'] = [self.args['init_weights']]
-        results_df['save_path'] = [self.args['save_path']]
-        results_df['seed'] = [self.args['seed']]
+        
         results_df.to_csv(osp.join(path, 'results.csv'), index=False)
 
 

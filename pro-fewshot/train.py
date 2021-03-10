@@ -44,7 +44,7 @@ if __name__ == '__main__':
         raise ValueError('Non-supported Dataset.')
 
     trainset = Dataset('train', args)
-    train_sampler = FewShotSampler(trainset.label, args.train_epi, args.way, args.shot, args.query)
+    train_sampler = FewShotSampler(trainset.label, args.train_epi, args.train_way, args.shot, args.query)
     train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=8, pin_memory=True)
 
     valset = Dataset('val', args)
@@ -93,24 +93,28 @@ if __name__ == '__main__':
 
     print('###### Training ######')
     global_count = 0
-    label = torch.arange(0, args.way, 1 / args.query).long()
-    label = label.cuda()
+    real_way = args.way
+
+    train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 
+    label = torch.arange(0, args.way, 1 / args.query).long().cuda()
+
     for epoch in range(1, args.max_epoch + 1):
         model.train()
         train_loss = Averager()
         train_acc = Averager()
-
+        args.way = args.train_way
+        
         train_batches = tqdm.tqdm(train_loader)
         for batch in train_batches:
             global_count += 1
             data, _ = [b.cuda() for b in batch]
             logits = model(data)
-            loss = F.cross_entropy(logits, label)
-            acc = count_acc(logits, label)
+            loss = F.cross_entropy(logits, train_label)
+            acc = count_acc(logits, train_label)
 
             writer.add_scalar('data/loss', float(loss), global_count)
             writer.add_scalar('data/acc', float(acc), global_count)
-            train_batches.set_description(f'Training | Epoch {epoch} | loss={loss.item():.4f} | acc={acc:.4f} |')
+            train_batches.set_description(f'Training   | Epoch {epoch} | loss={loss.item():.4f} | acc={acc:.4f} |')
 
             train_loss.add(loss.item())
             train_acc.add(acc)
@@ -122,9 +126,9 @@ if __name__ == '__main__':
 
         ###### Validation step ###########
         model.eval()
-
         val_loss = Averager()
         val_acc = Averager()
+        args.way = real_way
         
         with torch.no_grad():
             val_batches = tqdm.tqdm(val_loader)
@@ -146,13 +150,14 @@ if __name__ == '__main__':
             explog.max_acc = val_acc
             explog.max_acc_epoch = epoch
             torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
+            print(f'-------- New best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f} --------')
+
+        print(f'---------------------------------------------------------')
 
         explog.train_loss.append(train_loss.item())
         explog.train_acc.append(train_acc.item())
         explog.val_loss.append(val_loss)
         explog.val_acc.append(val_acc)
-
-        print(f'########## Best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f} ##########')
 
         explog.save(args.save_path)
         torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))

@@ -10,7 +10,6 @@ def set_gpu(x):
 def ensure_path(path, remove=True):
     if os.path.exists(path):
         if remove:
-            #if input('{} exists, remove? ([y]/n)'.format(path)) != 'n':
             shutil.rmtree(path)
             os.mkdir(path)
     else:
