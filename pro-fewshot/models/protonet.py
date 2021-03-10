@@ -25,11 +25,14 @@ class ProtoNet(nn.Module):
         supp_fts = embeddings[:self.args.way*self.args.shot]
         query_fts = embeddings[self.args.way*self.args.shot:]
 
-        # Flatten the features
-        supp_fts = supp_fts.reshape(self.args.shot*self.args.way, -1)
-        query_fts = query_fts.reshape(self.args.query*self.args.way, -1)
+        n_dim = supp_fts.shape[-1]
+        n_supp = supp_fts.shape[0]
+        n_qry = query_fts.shape[0]
 
-        # proto = supp_fts.reshape(self.args.way, self.args.shot, -1).mean(dim=1)
+        # Flatten the features with avg pooling
+        supp_fts = nn.AvgPool2d(n_dim)(supp_fts).reshape(n_supp, -1)
+        query_fts = nn.AvgPool2d(n_dim)(query_fts).reshape(n_qry, -1)
+
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
 
         logits = -euclidean_dist(query_fts, prototypes) / self.args.temperature
