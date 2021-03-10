@@ -50,17 +50,17 @@ class FewShotSampler():
     def __iter__(self):
         for i_batch in range(self.n_episodes):
             batch = []
-            classes = torch.randperm(len(self.m_ind))[:5]
+            classes = torch.randperm(len(self.m_ind))[:self.n_way]
 
             for c in classes:
                 l = self.m_ind[c]
-                pos = torch.randperm(len(l))[:5]
+                pos = torch.randperm(len(l))[:self.n_shot]
                 for im in l[pos]:
                     batch.append(im)
 
             for c in classes:
                 l = self.m_ind[c]
-                pos = torch.randperm(len(l))[:15]
+                pos = torch.randperm(len(l))[:self.n_queries]
                 for im in l[pos]:
                     batch.append(im)
 
