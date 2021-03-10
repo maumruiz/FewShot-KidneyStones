@@ -37,7 +37,7 @@ class MiniImageNet(Dataset):
         self.num_class = len(set(label))
 
         # Transformation
-        if args.model_type == 'ConvNet':
+        if args.backbone == 'ConvNet':
             image_size = 84
             self.transform = transforms.Compose([
                 transforms.Resize(92),
@@ -46,7 +46,7 @@ class MiniImageNet(Dataset):
                 transforms.Normalize(np.array([0.485, 0.456, 0.406]),
                                      np.array([0.229, 0.224, 0.225]))
             ])
-        elif args.model_type == 'ResNet':
+        elif args.backbone == 'ResNet':
             image_size = 80
             self.transform = transforms.Compose([
                 transforms.Resize(92),
@@ -54,7 +54,7 @@ class MiniImageNet(Dataset):
                 transforms.ToTensor(),
                 transforms.Normalize(np.array([x / 255.0 for x in [125.3, 123.0, 113.9]]), 
                                      np.array([x / 255.0 for x in [63.0, 62.1, 66.7]]))])
-        elif args.model_type == 'AmdimNet':
+        elif args.backbone == 'AmdimNet':
             INTERP = 3
             post_transform = transforms.Compose([
                 transforms.ToTensor(),

@@ -80,11 +80,11 @@ if __name__ == '__main__':
     explog.parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     print('###### Set optimizer ######')
-    if args.model_type == 'ConvNet':
+    if args.backbone == 'ConvNet':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    elif args.model_type == 'ResNet':
+    elif args.backbone == 'ResNet':
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-    elif args.model_type == 'AmdimNet':
+    elif args.backbone == 'AmdimNet':
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     else:
         raise ValueError('No Such Encoder')

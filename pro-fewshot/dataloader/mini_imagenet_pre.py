@@ -38,7 +38,7 @@ class MiniImageNet(Dataset):
         self.label = label
         self.num_class = len(set(label))
 
-        if args.model_type == 'conv':
+        if args.backbone == 'conv':
             image_size = 84
             if setname == 'train':
                 self.transform = transforms.Compose([
@@ -59,7 +59,7 @@ class MiniImageNet(Dataset):
                     transforms.Normalize(np.array([0.485, 0.456, 0.406]),
                                          np.array([0.229, 0.224, 0.225]))
                 ])            
-        elif args.model_type == 'ResNet':
+        elif args.backbone == 'ResNet':
             # for resNet
             image_size = 80
             mean = [x / 255 for x in [125.3, 123.0, 113.9]]
@@ -79,7 +79,7 @@ class MiniImageNet(Dataset):
                     transforms.CenterCrop(image_size),
                     transforms.ToTensor(),
                     transforms.Normalize(mean, std)])
-        elif args.model_type == 'AmdimNet':
+        elif args.backbone == 'AmdimNet':
             # image augmentation functions
             INTERP = 3
             self.flip_lr = transforms.RandomHorizontalFlip(p=0.5)
@@ -108,7 +108,7 @@ class MiniImageNet(Dataset):
                 post_transform
             ])
         else:
-            raise Exception("error of model_type")
+            raise Exception("error of backbone")
 
 
     def __len__(self):

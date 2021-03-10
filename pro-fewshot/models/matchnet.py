@@ -49,15 +49,15 @@ class MatchNet(nn.Module):
         self.use_bilstm = args.use_bilstm
         self.args = args # information about Shot and Way
         
-        if args.model_type == 'ConvNet':
+        if args.backbone == 'ConvNet':
             from networks.convnet import ConvNet
             self.encoder = ConvNet()
             layer_size = 32
-        elif args.model_type == 'ResNet':
+        elif args.backbone == 'ResNet':
             from networks.resnet import ResNet
             self.encoder = ResNet()
             layer_size = 320
-        elif args.model_type == 'AmdimNet':
+        elif args.backbone == 'AmdimNet':
             from networks.amdimnet import AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
             layer_size = int(args.rkhs/2)

@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--shot', type=int, default=1)
     parser.add_argument('--query', type=int, default=15)
     parser.add_argument('--way', type=int, default=5)
-    parser.add_argument('--model_type', type=str, default='ConvNet', choices=['ConvNet', 'ResNet', 'AmdimNet'])
+    parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet', 'AmdimNet'])
     parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])    
     parser.add_argument('--model_path', type=str, default=None)
     parser.add_argument('--gpu', default='0')

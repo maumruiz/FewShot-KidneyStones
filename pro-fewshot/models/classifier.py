@@ -9,15 +9,15 @@ class Classifier(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        if args.model_type == 'ConvNet':
+        if args.backbone == 'ConvNet':
             hdim = 64
             from networks.convnet import ConvNet
             self.encoder = ConvNet()
-        elif args.model_type == 'ResNet':
+        elif args.backbone == 'ResNet':
             hdim = 640
             from networks.resnet import ResNet as ResNet
             self.encoder = ResNet()
-        elif args.model_type == 'AmdimNet':
+        elif args.backbone == 'AmdimNet':
             from networks.amdimnet import AmdimNet as AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
             hdim = args.rkhs

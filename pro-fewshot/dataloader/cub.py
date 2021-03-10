@@ -42,7 +42,7 @@ class CUB(Dataset):
         self.num_class = np.unique(np.array(label)).shape[0]
 
 
-        if args.model_type == 'AmdimNet':
+        if args.backbone == 'AmdimNet':
             INTERP = 3
             post_transform = transforms.Compose([
                 transforms.ToTensor(),

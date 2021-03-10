@@ -7,13 +7,13 @@ class ProtoNet(nn.Module):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        if args.model_type == 'ConvNet':
+        if args.backbone == 'ConvNet':
             from networks.convnet import ConvNet
             self.encoder = ConvNet()
-        elif args.model_type == 'ResNet':
+        elif args.backbone == 'ResNet':
             from networks.resnet import ResNet
             self.encoder = ResNet()
-        elif args.model_type == 'AmdimNet':
+        elif args.backbone == 'AmdimNet':
             from networks.amdimnet import AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
         else:

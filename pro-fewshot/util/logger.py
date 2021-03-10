@@ -58,7 +58,8 @@ class ExpLogger():
 
         
         results_df = pd.DataFrame()
-        results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['model_type']}"]
+        results_df['exp_num'] = [self.args.exp_num]
+        results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['backbone']}"]
         results_df['details'] = [self.args['details']]
         results_df['way'] = [self.args['way']]
         results_df['shot'] = [self.args['shot']]
@@ -78,6 +79,6 @@ class ExpLogger():
         results_df['init_weights'] = [self.args['init_weights']]
         results_df['save_path'] = [self.args['save_path']]
         results_df['seed'] = [self.args['seed']]
-        results_df.to_csv(osp.join(path, 'results.csv'))
+        results_df.to_csv(osp.join(path, 'results.csv'), index=False)
 
 
