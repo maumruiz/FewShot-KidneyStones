@@ -33,7 +33,9 @@ class ProtoNet(nn.Module):
         supp_fts = nn.AvgPool2d(n_dim)(supp_fts).reshape(n_supp, -1)
         query_fts = nn.AvgPool2d(n_dim)(query_fts).reshape(n_qry, -1)
 
-        # Here we can save the features to later visualization
+        # Save the features to later visualization
+        if self.args.save_features:
+            self.args.features.append(supp_fts.cpu().detach())
 
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
 

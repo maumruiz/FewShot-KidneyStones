@@ -38,6 +38,9 @@ def process_args(args):
     if args.train_way == 0:
         args.train_way = args.way
 
+    if args.save_features:
+        init_saving_features(args)
+
     gmt = time.localtime() 
     timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
     save_path1 = f'{args.dataset}-{args.model}-{args.backbone}'
@@ -49,3 +52,8 @@ def process_args(args):
 def print_args(args):
     for key, value in args.__dict__.items():
         print(f'{key}: {value}')
+
+def init_saving_features(args):
+    args.features = []
+    args.fts_ids = []
+    args.fts_labels = []

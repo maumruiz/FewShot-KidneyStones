@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from dataloader.samplers import FewShotSampler
 from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
-from util.args_parser import get_args, process_args, print_args
+from util.args_parser import get_args, process_args, print_args, init_saving_features
 from util.logger import ExpLogger
 
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         train_batches = tqdm.tqdm(train_loader)
         for batch in train_batches:
             global_count += 1
-            data, _ = [b.cuda() for b in batch]
+            data = batch[0].cuda()
             logits = model(data)
             loss = F.cross_entropy(logits, train_label)
             acc = count_acc(logits, train_label)
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         with torch.no_grad():
             val_batches = tqdm.tqdm(val_loader)
             for batch in val_batches:
-                data, _ = [b.cuda() for b in batch]
+                data = batch[0].cuda()
                 logits = model(data)
                 loss = F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)    
@@ -178,12 +178,18 @@ if __name__ == '__main__':
     model.eval()
 
     ave_acc = Averager()
+    args.save_features = True
+    init_saving_features(args)
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader)
         for i, batch in enumerate(test_batches, 1):
-            data, _ = [b.cuda() for b in batch]
+            data = batch[0].cuda()
             logits = model(data)
             acc = count_acc(logits, label)
+
+            if args.save_features:
+                args.fts_labels.append(batch[1][:args.way*args.shot])
+                args.fts_ids.append(batch[2][:args.way*args.shot])
             
             ave_acc.add(acc)
             test_acc_record[i-1] = acc
@@ -203,5 +209,6 @@ if __name__ == '__main__':
     explog.save(args.save_path)
     explog.save_json(args.save_path)
     explog.save_csv(args.save_path)
+    explog.save_features(args.save_path) 
 
     print(f"Elapsed time: {elapsed_time}")

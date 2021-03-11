@@ -19,7 +19,17 @@ class ExpLogger():
     
     def _to_obj(self):
         log = {}
-        log['args'] = self.args
+        args = self.args.copy()
+        if 'features' in args.keys():
+            del args['features']
+        
+        if 'fts_ids' in args.keys():
+            del args['fts_ids']
+
+        if 'fts_labels' in args.keys():
+            del args['fts_labels']
+         
+        log['args'] = args
         log['train_loss'] = self.train_loss
         log['train_acc'] = self.train_acc
         log['val_loss'] = self.val_loss
@@ -42,7 +52,7 @@ class ExpLogger():
         with open(osp.join(path, 'experiment.json'), "w") as write_file:
             json.dump(log, write_file, indent=4)
 
-    def save_csv(self, path, which='all'):
+    def save_csv(self, path):
         trainval_df = pd.DataFrame()
         trainval_df['epoch'] = [e+1 for e in range(len(self.train_loss))]
         trainval_df['train_loss'] = self.train_loss
@@ -82,5 +92,14 @@ class ExpLogger():
         results_df['temperature'] = [self.args['temperature']]
         
         results_df.to_csv(osp.join(path, 'results.csv'), index=False)
+
+    def save_features(self, path):
+        fts_df = pd.DataFrame(torch.cat(self.args['features'], dim=0).numpy())
+        fts_df['label'] = torch.cat(self.args['fts_labels'], dim=0).numpy()
+        fts_df['img_id'] = [id for ids in self.args['fts_ids'] for id in ids]
+        cols = list(fts_df)
+        cols = [cols[-1], cols[-2]] + cols[:-2]
+        fts_df = fts_df[cols]
+        fts_df.to_csv(osp.join(path, 'features.csv'), index=False)
 
 
