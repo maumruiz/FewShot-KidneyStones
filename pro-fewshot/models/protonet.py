@@ -10,20 +10,30 @@ class ProtoNet(nn.Module):
         if args.backbone == 'ConvNet':
             from networks.convnet import ConvNet
             self.encoder = ConvNet()
+            hdim = 64
         elif args.backbone == 'ResNet':
             from networks.resnet import ResNet
             self.encoder = ResNet()
+            hdim = 640
         elif args.backbone == 'AmdimNet':
             from networks.amdimnet import AmdimNet
             self.encoder = AmdimNet(ndf=args.ndf, n_rkhs=args.rkhs, n_depth=args.nd)
+            hdim = args.rkhs
         else:
             raise ValueError('Encoder doesnt exist')
+
+        if 'CTM' in args.modules:
+            from networks.ctm import CTM
+            self.ctm = CTM(args, hdim)
 
     def forward(self, data):
         embeddings = self.encoder(data)
 
         supp_fts = embeddings[:self.args.way*self.args.shot]
         query_fts = embeddings[self.args.way*self.args.shot:]
+
+        if 'CTM' in self.args.modules:
+            supp_fts, query_fts = self.ctm(supp_fts, query_fts)
 
         n_dim = supp_fts.shape[-1]
         n_supp = supp_fts.shape[0]
