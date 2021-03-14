@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
     parser.add_argument('--model', type=str, default='ProtoNet', choices=['ProtoNet'])
     parser.add_argument('--modules', type=str)
-    parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet'])
+    parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18'])
     parser.add_argument('--way', type=int, default=5)
     parser.add_argument('--shot', type=int, default=1)
     parser.add_argument('--query', type=int, default=15)
