@@ -11,8 +11,12 @@ class ProtoNet(nn.Module):
             from networks.convnet import ConvNet
             self.encoder = ConvNet()
             hdim = 64
-        elif args.backbone == 'ResNet':
-            from networks.resnet import ResNet
+        elif args.backbone == 'ResNet12':
+            from networks.resnet12 import ResNet
+            self.encoder = ResNet()
+            hdim = 640
+        elif args.backbone == 'ResNet18':
+            from networks.resnet8 import ResNet
             self.encoder = ResNet()
             hdim = 640
         elif args.backbone == 'AmdimNet':

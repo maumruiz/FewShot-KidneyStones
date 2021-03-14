@@ -11,14 +11,72 @@ def conv_block(in_channels, out_channels):
     )
 
 def _make_conv_layer(blocks, in_channels, out_channels, reduce_dims = False, reduce_kernel=3):
-        layers = []
-        for i in range(blocks):
-            layers.append(conv_block(in_channels, out_channels))
-            in_channels = out_channels
-        if reduce_dims:
-            layers.append(nn.MaxPool2d(reduce_kernel, stride=1))
-        return nn.Sequential(*layers)
+    layers = []
+    for i in range(blocks):
+        layers.append(conv_block(in_channels, out_channels))
+        in_channels = out_channels
 
+    if reduce_dims:
+        layers.append(nn.MaxPool2d(reduce_kernel, stride=1))
+    return nn.Sequential(*layers)
+
+class Bottleneck(nn.Module):
+    expansion = 4
+
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(Bottleneck, self).__init__()
+        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+                               padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(planes * 4)
+        self.relu = nn.ReLU(inplace=True)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+
+        out = self.conv3(out)
+        out = self.bn3(out)
+
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+def _make_res_layer(blocks, inplanes, planes, reduce_dims = False, reduce_kernel=3, stride=1):
+    planes = round(planes / 4)
+    downsample = None
+    if stride != 1 or inplanes != planes * Bottleneck.expansion:
+        downsample = nn.Sequential(
+            nn.Conv2d(inplanes, planes * Bottleneck.expansion,
+                        kernel_size=1, stride=stride, bias=False),
+            nn.BatchNorm2d(planes * Bottleneck.expansion),
+        )
+    layers = []
+    layers.append(Bottleneck(inplanes, planes, stride, downsample))
+    inplanes = planes * Bottleneck.expansion
+    for i in range(1, blocks):
+        layers.append(Bottleneck(inplanes, planes))
+    
+    if reduce_dims:
+        layers.append(nn.MaxPool2d(reduce_kernel, stride=1))
+
+    return nn.Sequential(*layers)
 
 class CTM(nn.Module):
 
@@ -32,6 +90,8 @@ class CTM(nn.Module):
 
         if args.ctm_block_type == 'ConvBlock':
             make_layer = _make_conv_layer
+        elif args.ctm_block_type == 'ResBlock':
+            make_layer = _make_res_layer
         else:
             raise ValueError('Invalid CTM block type')
 
@@ -40,16 +100,39 @@ class CTM(nn.Module):
         out_concentrator = round(in_channels - (diff_channels / 2)) if in_channels != out_channels else in_channels
         if args.ctm_m_type == 'fused':
             in_concentrator *= args.shot
-        self.concentrator = make_layer(blocks, in_concentrator, out_concentrator, args.ctm_reduce_dims)
+
+        if not args.ctm_split_blocks:
+            self.concentrator = make_layer(blocks, in_concentrator, out_concentrator, args.ctm_reduce_dims)
+        else:
+            diff_blocks = blocks - 3
+            self.concentrator = nn.Sequential(
+                make_layer(3, in_concentrator, round(out_concentrator*2)),
+                make_layer(diff_blocks, round(out_concentrator*2), round(out_concentrator), args.ctm_reduce_dims)
+            )
 
         ### Projector
         in_projector = out_concentrator
         if args.ctm_m_type == 'fused':
             in_projector *= args.way
-        self.projector = make_layer(blocks, in_projector, out_channels, args.ctm_reduce_dims)
+
+        if not args.ctm_split_blocks:
+            self.projector = make_layer(blocks, in_projector, out_channels, args.ctm_reduce_dims)
+        else:
+            diff_blocks = blocks - 3
+            self.projector = nn.Sequential(
+                make_layer(3, in_projector, round(out_channels*2)),
+                make_layer(diff_blocks, round(out_channels*2), round(out_channels), args.ctm_reduce_dims)
+            )
 
         ### Reshaper
-        self.reshaper = make_layer(blocks, in_channels, out_channels, args.ctm_reduce_dims, 5)
+        if not args.ctm_split_blocks:
+            self.reshaper = make_layer(blocks, in_channels, out_channels, args.ctm_reduce_dims, 5)
+        else:
+            diff_blocks = blocks - 3
+            self.reshaper = nn.Sequential(
+                make_layer(3, in_channels, round(out_channels*2)),
+                make_layer(diff_blocks, round(out_channels*2), round(out_channels), args.ctm_reduce_dims, 5)
+            )
 
     def forward(self, supp_fts, query_fts):
         # Support fts: WaxSh, C(64), H'(5), W'(5)
