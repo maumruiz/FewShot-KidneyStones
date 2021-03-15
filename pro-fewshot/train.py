@@ -82,7 +82,7 @@ if __name__ == '__main__':
     print('###### Set optimizer ######')
     if args.backbone == 'ConvNet':
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    elif args.backbone == 'ResNet':
+    elif 'ResNet' in args.backbone:
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     elif args.backbone == 'AmdimNet':
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)

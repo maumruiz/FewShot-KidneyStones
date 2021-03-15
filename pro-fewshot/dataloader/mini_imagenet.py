@@ -46,7 +46,7 @@ class MiniImageNet(Dataset):
                 transforms.Normalize(np.array([0.485, 0.456, 0.406]),
                                      np.array([0.229, 0.224, 0.225]))
             ])
-        elif args.backbone == 'ResNet':
+        elif 'ResNet' in args.backbone:
             image_size = 80
             self.transform = transforms.Compose([
                 transforms.Resize(92),

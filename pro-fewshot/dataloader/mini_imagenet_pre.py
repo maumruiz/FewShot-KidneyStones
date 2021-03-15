@@ -59,7 +59,7 @@ class MiniImageNet(Dataset):
                     transforms.Normalize(np.array([0.485, 0.456, 0.406]),
                                          np.array([0.229, 0.224, 0.225]))
                 ])            
-        elif args.backbone == 'ResNet':
+        elif 'ResNet' in args.backbone:
             # for resNet
             image_size = 80
             mean = [x / 255 for x in [125.3, 123.0, 113.9]]
