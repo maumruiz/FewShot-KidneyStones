@@ -45,11 +45,11 @@ if __name__ == '__main__':
 
     trainset = Dataset('train', args)
     train_sampler = FewShotSampler(trainset.label, args.train_epi, args.train_way, args.shot, args.query)
-    train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=8, pin_memory=True)
+    train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=2, pin_memory=True)
 
     valset = Dataset('val', args)
     val_sampler = FewShotSampler(valset.label, args.val_epi, args.way, args.shot, args.query)
-    val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=8, pin_memory=True)
+    val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=2, pin_memory=True)
     
 
     print('###### Create model ######')
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     print('###### Testing ######')
     test_set = Dataset('test', args)
     sampler = FewShotSampler(test_set.label, args.test_epi, args.way, args.shot, args.query)
-    loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)
+    loader = DataLoader(test_set, batch_sampler=sampler, num_workers=2, pin_memory=True)
     test_acc_record = np.zeros((args.test_epi,))
 
     model.load_state_dict(torch.load(osp.join(args.save_path, 'max_acc' + '.pth'))['params'])
