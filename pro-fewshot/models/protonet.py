@@ -16,7 +16,7 @@ class ProtoNet(nn.Module):
             self.encoder = ResNet()
             hdim = 640
         elif args.backbone == 'ResNet18':
-            from networks.resnet8 import ResNet
+            from networks.resnet18 import ResNet
             self.encoder = ResNet()
             hdim = 640
         elif args.backbone == 'AmdimNet':
@@ -54,6 +54,7 @@ class ProtoNet(nn.Module):
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
 
         logits = -euclidean_dist(query_fts, prototypes) / self.args.temperature
+        
         return logits
 
     def compute_prototypes(self, support: torch.Tensor, k: int, n: int) -> torch.Tensor:
