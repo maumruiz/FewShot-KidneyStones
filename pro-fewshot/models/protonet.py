@@ -29,6 +29,10 @@ class ProtoNet(nn.Module):
         if 'CTM' in args.modules:
             from networks.ctm import CTM
             self.ctm = CTM(args, hdim)
+        
+        if 'ICN' in args.modules:
+            from algorithms.icn import ICN
+            self.icn = ICN(args)
 
     def forward(self, data):
         embeddings = self.encoder(data)
@@ -46,6 +50,9 @@ class ProtoNet(nn.Module):
         # Flatten the features with avg pooling
         supp_fts = nn.AvgPool2d(n_dim)(supp_fts).reshape(n_supp, -1)
         query_fts = nn.AvgPool2d(n_dim)(query_fts).reshape(n_qry, -1)
+
+        if 'ICN' in self.args.modules:
+            supp_fts, query_fts = self.icn.transform(supp_fts, query_fts)
 
         # Save the features to later visualization
         if self.args.save_features:
