@@ -9,10 +9,10 @@ class PCA():
         
         # Center data
         self.mean_ = X.mean(0)
-        X_center =  X - self.mean_
+        X -= self.mean_
 
         # SVD
-        u, s, v = torch.linalg.svd(X_center, full_matrices=False)
+        u, s, v = torch.linalg.svd(X, full_matrices=False)
         # flip eigenvectors' sign to enforce deterministic output
         u, v = self._svd_flip(u, v)
 

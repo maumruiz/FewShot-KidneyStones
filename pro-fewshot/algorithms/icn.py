@@ -2,37 +2,43 @@ import torch
 import numpy as np
 
 from sklearn.neighbors import NearestNeighbors
-from algorithms.pca import PCA
-# from sklearn.manifold import Isomap
-# import umap
+from sklearn.decomposition import PCA
+from sklearn.manifold import Isomap
+import umap
 
 class ICN():
     def __init__(self, args):
         self.args = args
 
     def transform(self, supp_fts, query_fts):
+        X = supp_fts.cpu().detach().numpy()
         y = np.arange(0, self.args.way, 1/self.args.shot).astype(int)
 
-        red = PCA(n_components=6).fit(supp_fts)
-        emb = red.transform(supp_fts)
-        score = self._score(embeddings, y)
+        original_score = self._score(X, y)
+        best = {'score': original_score, 'embeddings': supp_fts, 'reducer': None}
 
-        # methods = [PCA, umap.UMAP, Isomap]
-        # best = {'score': 0.0, 'embeddings': None, 'reducer': None}
+        n_components = 6
 
-        # for method in methods:
-        #     reducer = method(n_components=6).fit(X)
-        #     embeddings = reducer.transform(X)
-        #     score = self.score(embeddings, y)
+        methods = [PCA, umap.UMAP, Isomap]
 
-        #     if score > best['score']:
-        #         best['score'] = score
-        #         best['embeddings'] = embeddings
-        #         best['reducer'] = reducer
+        for method in methods:
+            reducer = method(n_components=n_components).fit(X)
+            embeddings = reducer.transform(X)
+            score = self._score(embeddings, y)
 
-        # supp = best['embeddings']
-        # query = best['reducer'].transform(qry)
-        # return torch.from_numpy(supp).cuda(), torch.from_numpy(query).cuda()
+            if score > best['score']:
+                best['score'] = score
+                best['embeddings'] = embeddings
+                best['reducer'] = reducer
+
+
+        if best['reducer']:
+            supp_fts[:, :n_components] = torch.Tensor(best['embeddings'])
+            supp_fts = supp_fts[:, :n_components]
+            qry = best['reducer'].transform(query_fts.cpu().detach().numpy())
+            query_fts[:, :n_components] = torch.Tensor(qry)
+            query_fts = query_fts[:, :n_components]
+
         return supp_fts, query_fts
 
     def _score(self, X, y, k=3, p=2, q=2, r=2):

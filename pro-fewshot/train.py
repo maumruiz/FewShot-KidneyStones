@@ -179,7 +179,7 @@ if __name__ == '__main__':
     model.eval()
 
     ave_acc = Averager()
-    args.save_features = True
+    args.save_features = False
     init_saving_features(args)
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader)
@@ -210,6 +210,7 @@ if __name__ == '__main__':
     explog.save(args.save_path)
     explog.save_json(args.save_path)
     explog.save_csv(args.save_path)
-    explog.save_features(args.save_path) 
+    if args.save_features:
+        explog.save_features(args.save_path) 
 
     print(f"Elapsed time: {elapsed_time}")
