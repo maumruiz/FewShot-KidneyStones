@@ -19,6 +19,9 @@ class ICN():
 
         n_components = 6
 
+        if n_components > supp_fts.size(0):
+            n_components = supp_fts.size(0)
+
         methods = [PCA, umap.UMAP, Isomap]
 
         for method in methods:
