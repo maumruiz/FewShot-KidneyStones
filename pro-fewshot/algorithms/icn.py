@@ -2,9 +2,8 @@ import torch
 import numpy as np
 
 from sklearn.neighbors import NearestNeighbors
-from sklearn.decomposition import PCA
-from sklearn.manifold import Isomap
-import umap
+from cuml.decomposition import PCA
+from cuml import UMAP
 
 class ICN():
     def __init__(self, args):
@@ -13,34 +12,47 @@ class ICN():
     def transform(self, supp_fts, query_fts):
         X = supp_fts.cpu().detach().numpy()
         y = np.arange(0, self.args.way, 1/self.args.shot).astype(int)
-
         original_score = self._score(X, y)
         best = {'score': original_score, 'embeddings': supp_fts, 'reducer': None}
 
         n_components = 6
+        n_neighbors = 6
 
-        if n_components > supp_fts.size(0):
-            n_components = supp_fts.size(0)
+        if n_components >= supp_fts.size(0):
+            n_components = supp_fts.size(0) - 2
+            n_neighbors = n_components
 
-        methods = [PCA, umap.UMAP, Isomap]
+        umap_reducer = UMAP(n_components=6).fit(X)
+        umap_embeddings = umap_reducer.transform(X)
+        umap_score = self._score(umap_embeddings, y)
 
-        for method in methods:
-            reducer = method(n_components=n_components).fit(X)
-            embeddings = reducer.transform(X)
-            score = self._score(embeddings, y)
-
-            if score > best['score']:
-                best['score'] = score
-                best['embeddings'] = embeddings
-                best['reducer'] = reducer
+        # pca_reducer = PCA(n_components=6).fit(X)
+        # pca_embeddings = pca_reducer.transform(X)
+        # pca_score = self._score(pca_embeddings, y)
 
 
-        if best['reducer']:
-            supp_fts[:, :n_components] = torch.Tensor(best['embeddings'])
-            supp_fts = supp_fts[:, :n_components]
-            qry = best['reducer'].transform(query_fts.cpu().detach().numpy())
-            query_fts[:, :n_components] = torch.Tensor(qry)
-            query_fts = query_fts[:, :n_components]
+
+        # # methods = [PCA, UMAP]
+        # methods = [{'method': PCA, 'args': {}, 'name':'PCA'},
+        #             {'method': UMAP, 'args': {'n_neighbors': n_neighbors}, 'name':'umap'}]
+
+        # for m in methods:
+        #     reducer = m['method'](n_components=n_components, **m['args']).fit(X)
+        #     embeddings = reducer.transform(X)
+        #     score = self._score(embeddings, y)
+
+        #     if score > best['score']:
+        #         best['score'] = score
+        #         best['embeddings'] = embeddings
+        #         best['reducer'] = reducer
+
+
+        # if best['reducer']:
+        #     supp_fts[:, :n_components] = torch.Tensor(best['embeddings'])
+        #     supp_fts = supp_fts[:, :n_components]
+        #     qry = best['reducer'].transform(query_fts.cpu().detach().numpy())
+        #     query_fts[:, :n_components] = torch.Tensor(qry)
+        #     query_fts = query_fts[:, :n_components]
 
         return supp_fts, query_fts
 
@@ -59,7 +71,9 @@ class ICN():
         # Returns
             class_prototypes: Prototypes aka mean embeddings for each class
         """
-        X = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0)) #min max scale by feature
+        a = X - X.min(axis=0)
+        b = X.max(axis=0) - X.min(axis=0)
+        X = np.divide(a , b, out=np.zeros_like(X), where=b!=0) #min max scale by feature
         nbrs = NearestNeighbors(n_neighbors=k+1).fit(X)
         distances, indices = nbrs.kneighbors(X)
         distances = distances[:,1:]
