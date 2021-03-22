@@ -45,11 +45,11 @@ if __name__ == '__main__':
 
     trainset = Dataset('train', args)
     train_sampler = FewShotSampler(trainset.label, args.train_epi, args.train_way, args.shot, args.query)
-    train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=4, pin_memory=True)
+    train_loader = DataLoader(dataset=trainset, batch_sampler=train_sampler, num_workers=2, pin_memory=True)
 
     valset = Dataset('val', args)
     val_sampler = FewShotSampler(valset.label, args.val_epi, args.way, args.shot, args.query)
-    val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=4, pin_memory=True)
+    val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=2, pin_memory=True)
     
 
     print('###### Create model ######')
