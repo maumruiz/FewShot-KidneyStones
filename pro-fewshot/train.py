@@ -179,7 +179,7 @@ if __name__ == '__main__':
     model.eval()
 
     ave_acc = Averager()
-    args.save_features = False
+    args.save_features = True
     init_saving_features(args)
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader)

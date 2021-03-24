@@ -94,7 +94,16 @@ class ExpLogger():
         results_df.to_csv(osp.join(path, 'results.csv'), index=False)
 
     def save_features(self, path):
-        fts_df = pd.DataFrame(torch.cat(self.args['features'], dim=0).numpy())
+
+        # ICN save different sizes of features
+        max_dim = max([x.size(1) for x in self.args['features']])
+        features = torch.cat(
+            [torch.cat(
+                (feature, torch.full((feature.size(0), max_dim - feature.size(1)), -1, dtype=torch.float)), axis=1) 
+            for feature in self.args['features']]
+        )
+
+        fts_df = pd.DataFrame(features.numpy())
         fts_df['label'] = torch.cat(self.args['fts_labels'], dim=0).numpy()
         fts_df['img_id'] = [id for ids in self.args['fts_ids'] for id in ids]
         cols = list(fts_df)
