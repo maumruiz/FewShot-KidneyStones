@@ -14,15 +14,18 @@ class ICN():
     def _get_models(self, args):
         supp_samples = (args.way * args.shot)
         query_samples = (args.way * args.query)
-        task_samples = supp_samples + query_samples
+
+        if self.args.icn_reduction_set == 'all':
+            task_samples = supp_samples + query_samples
+        elif self.args.icn_reduction_set == 'support':
+            task_samples = supp_samples
 
         models = []
-
         n_components = 6
         n_neighbors = 6
 
-        if n_components >= supp_samples:
-            n_components = supp_samples - 2
+        if n_components >= task_samples:
+            n_components = task_samples - 2
             n_neighbors = n_components
 
         if 'pca' in args.icn_models:
@@ -64,9 +67,20 @@ class ICN():
 
     @ignore_warnings(category=ConvergenceWarning)
     def transform(self, supp_fts, query_fts):
-        X = supp_fts.cpu().detach().numpy()
+        # Vectors for support and query
+        support = supp_fts.cpu().detach().numpy()
+        query = query_fts.cpu().detach().numpy()
+
+        # Set X (data used to generate the feature reduction) and y (support data labels)
+        if self.args.icn_reduction_set == 'all':
+            X = np.concatenate((support, query))
+        elif self.args.icn_reduction_set == 'support':
+            X = support
+
         y = np.arange(0, self.args.way, 1/self.args.shot).astype(int)
-        original_score = self._score(X, y)
+
+        # Calculate ICNN score with original feature vector
+        original_score = self._score(support, y)
 
         # Initialize ICN scores logger
         if self.args.save_icn_scores:
@@ -78,7 +92,7 @@ class ICN():
         # Evaluate feature reductor models
         for m in self.models:
             reducer = m['model'](**m['args']).fit(X)
-            embeddings = reducer.transform(X)
+            embeddings = reducer.transform(support)
             score = self._score(embeddings, y)
 
             if self.args.save_icn_scores:
@@ -96,8 +110,8 @@ class ICN():
             n_components = best['n_components']
             supp_fts[:, :n_components] = torch.Tensor(best['embeddings'])
             supp_fts = supp_fts[:, :n_components]
-            qry = best['reducer'].transform(query_fts.cpu().detach().numpy())
-            query_fts[:, :n_components] = torch.Tensor(qry)
+            query_embeddings = best['reducer'].transform(query)
+            query_fts[:, :n_components] = torch.Tensor(query_embeddings)
             query_fts = query_fts[:, :n_components]
 
         if self.args.save_icn_scores:
