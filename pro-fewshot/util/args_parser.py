@@ -10,6 +10,7 @@ def get_args():
     parser.add_argument('--modules', type=str)
     parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18'])
     parser.add_argument('--way', type=int, default=5)
+    parser.add_argument('--train_way', type=int, default=5)
     parser.add_argument('--shot', type=int, default=1)
     parser.add_argument('--query', type=int, default=15)
     parser.add_argument('--max_epoch', type=int, default=200)
@@ -20,18 +21,16 @@ def get_args():
     parser.add_argument('--step_size', type=int, default=20)
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
-    parser.add_argument('--train_way', type=int, default=5)
-    parser.add_argument('--details', type=str, default='')
-    parser.add_argument('--exp_num', type=int, default=1)
-    parser.add_argument('--save_features', action='store_true')
 
     # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
     # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
     # CUB, ConvNet, './saves/initialization/cub/con-pre.pth'
+    parser.add_argument('--save_features', action='store_true')
     parser.add_argument('--init_weights', type=str, default=None)
     parser.add_argument('--save_path', type=str, default='runs')
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seed', type=int, default=1234)
+    parser.add_argument('--exp_num', type=int, default=1)
 
     # CTM args
     parser.add_argument('--ctm_blocks', type=int, default=4)
@@ -40,6 +39,13 @@ def get_args():
     parser.add_argument('--ctm_m_type', type=str, default='fused', choices=['fused', 'avg'])
     parser.add_argument('--ctm_reduce_dims', action='store_true')
     parser.add_argument('--ctm_split_blocks', action='store_true')
+
+    # ICN args
+    parser.add_argument('--save_icn_scores', action='store_true')
+    parser.add_argument('--icn_models', type=str, default='pca,isomap')
+    parser.add_argument('--icn_reduction_set', type=str, default='support', choices=['support', 'all'])
+    parser.add_argument('--icn_reduction_type', type=str, default='unsupervised', choices=['supervised', 'unsupervised'])
+
 
     return parser.parse_args()
 
@@ -60,6 +66,14 @@ def process_args(args):
         del args.ctm_reduce_dims
         del args.ctm_split_blocks
 
+    if 'ICN' not in args.modules:
+        del args.save_icn_scores
+        del args.icn_models
+        del args.icn_reduction_set
+        del args.icn_reduction_type
+    else:
+        args.icn_models = args.icn_models.split(',') if args.icn_models else []
+
     gmt = time.localtime() 
     timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
     path1 = [args.dataset, args.model, args.backbone] + args.modules
@@ -76,3 +90,10 @@ def init_saving_features(args):
     args.features = []
     args.fts_ids = []
     args.fts_labels = []
+
+def init_saving_icn_scores(args):
+    args.icn_log = {}
+    args.icn_log['original'] = []
+    for model in args.icn_models:
+        args.icn_log[model] = []
+    args.icn_log['best'] = []

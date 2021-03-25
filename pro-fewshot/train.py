@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from dataloader.samplers import FewShotSampler
 from util.utils import set_gpu, Averager, Timer, set_seed
 from util.metric import compute_confidence_interval, count_acc
-from util.args_parser import get_args, process_args, print_args, init_saving_features
+from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
 from util.logger import ExpLogger
 
 
@@ -179,8 +179,14 @@ if __name__ == '__main__':
     model.eval()
 
     ave_acc = Averager()
+
     args.save_features = True
     init_saving_features(args)
+
+    if 'ICN' in args.modules:
+        args.save_icn_scores = True
+        init_saving_icn_scores(args)
+
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader)
         for i, batch in enumerate(test_batches, 1):
@@ -210,7 +216,11 @@ if __name__ == '__main__':
     explog.save(args.save_path)
     explog.save_json(args.save_path)
     explog.save_csv(args.save_path)
-    if args.save_features:
-        explog.save_features(args.save_path) 
 
+    if args.save_features:
+        explog.save_features(args.save_path)
+
+    if 'ICN' in args.modules and args.save_icn_scores:
+        explog.save_icnn_scores(args.save_path)
+    
     print(f"Elapsed time: {elapsed_time}")

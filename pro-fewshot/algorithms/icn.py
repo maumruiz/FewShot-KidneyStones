@@ -2,49 +2,77 @@ import torch
 import numpy as np
 
 from sklearn.neighbors import NearestNeighbors
-from sklearn.decomposition import PCA
-from sklearn.manifold import Isomap
-# from cuml import UMAP
 
 class ICN():
     def __init__(self, args):
         self.args = args
+        self.models = self._get_models(args)
+
+    def _get_models(self, args):
+        supp_samples = (args.way * args.shot)
+        query_samples = (args.way * args.query)
+        task_samples = supp_samples + query_samples
+
+        models = []
+
+        n_components = 6
+        n_neighbors = 6
+
+        if n_components >= supp_samples:
+            n_components = supp_samples - 2
+            n_neighbors = n_components
+
+        if 'pca' in args.icn_models:
+            from sklearn.decomposition import PCA
+            pca_model = {'model': PCA, 'args': {'n_components': n_components}, 'name':'pca'}
+            models.append(pca_model)
+
+        if 'isomap' in args.icn_models:
+            from sklearn.manifold import Isomap
+            isomap_model = {'model': Isomap, 'args': {'n_components': n_components, 'n_neighbors': n_neighbors}, 'name':'isomap'}
+            models.append(isomap_model)
+        
+        return models
 
     def transform(self, supp_fts, query_fts):
         X = supp_fts.cpu().detach().numpy()
         y = np.arange(0, self.args.way, 1/self.args.shot).astype(int)
         original_score = self._score(X, y)
-        best = {'score': original_score, 'embeddings': supp_fts, 'reducer': None}
 
-        n_components = 6
-        n_neighbors = 6
+        # Initialize ICN scores logger
+        if self.args.save_icn_scores:
+            self.args.icn_log['original'].append(original_score)
+        
+        # Initialize best feature reductor
+        best = {'score': original_score, 'embeddings': supp_fts, 'reducer': None, 'name': 'original'}
 
-        if n_components >= supp_fts.size(0):
-            n_components = supp_fts.size(0) - 2
-            n_neighbors = n_components
-
-        methods = [PCA, Isomap]
-        methods = [{'method': PCA, 'args': {}, 'name':'PCA'},
-                    {'method': Isomap, 'args': {'n_neighbors': n_neighbors}, 'name':'isomap'}]
-
-        for m in methods:
-            # reducer = m(n_components=n_components).fit(X)
-            reducer = m['method'](n_components=n_components, **m['args']).fit(X)
+        # Evaluate feature reductor models
+        for m in self.models:
+            reducer = m['model'](**m['args']).fit(X)
             embeddings = reducer.transform(X)
             score = self._score(embeddings, y)
+
+            if self.args.save_icn_scores:
+                self.args.icn_log[m['name']].append(score)
 
             if score > best['score']:
                 best['score'] = score
                 best['embeddings'] = embeddings
                 best['reducer'] = reducer
+                best['n_components'] = m['args']['n_components']
+                best['name'] = m['name']
 
-
+        # Select best model
         if best['reducer']:
+            n_components = best['n_components']
             supp_fts[:, :n_components] = torch.Tensor(best['embeddings'])
             supp_fts = supp_fts[:, :n_components]
             qry = best['reducer'].transform(query_fts.cpu().detach().numpy())
             query_fts[:, :n_components] = torch.Tensor(qry)
             query_fts = query_fts[:, :n_components]
+
+        if self.args.save_icn_scores:
+                self.args.icn_log['best'].append(best['name'])
 
         return supp_fts, query_fts
 

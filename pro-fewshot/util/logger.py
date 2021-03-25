@@ -19,17 +19,19 @@ class ExpLogger():
     
     def _to_obj(self):
         log = {}
-        args = self.args.copy()
-        if 'features' in args.keys():
-            del args['features']
         
-        if 'fts_ids' in args.keys():
-            del args['fts_ids']
+        arg_keys = ['dataset', 'model', 'modules', 'backbone', 'way', 'train_way', 
+        'shot', 'query', 'max_epoch', 'train_epi', 'val_epi', 'test_epi', 'lr', 'step_size',
+        'gamma', 'temperature', 'init_weights', 'step_size', 'save_path', 'seed', 'exp_num']
 
-        if 'fts_labels' in args.keys():
-            del args['fts_labels']
-         
-        log['args'] = args
+        if 'CTM' in self.args['modules']:
+            arg_keys += ['ctm_blocks', 'ctm_out_channels', 'ctm_block_type', 
+            'ctm_m_type', 'ctm_reduce_dims', 'ctm_split_blocks']
+
+        if 'ICN' in self.args['modules']:
+            arg_keys += ['icn_models', 'icn_reduction_set', 'icn_reduction_type']
+
+        log['args'] = {k: self.args[k] for k in arg_keys}
         log['train_loss'] = self.train_loss
         log['train_acc'] = self.train_acc
         log['val_loss'] = self.val_loss
@@ -70,7 +72,6 @@ class ExpLogger():
         results_df = pd.DataFrame()
         results_df['exp_num'] = [self.args['exp_num']]
         results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['backbone']}"]
-        results_df['details'] = [self.args['details']]
         results_df['way'] = [self.args['way']]
         results_df['shot'] = [self.args['shot']]
         results_df['queries'] = [self.args['query']]
@@ -110,5 +111,17 @@ class ExpLogger():
         cols = [cols[-1], cols[-2]] + cols[:-2]
         fts_df = fts_df[cols]
         fts_df.to_csv(osp.join(path, 'features.csv'), index=False)
+
+    def save_icnn_scores(self, path):
+        icn_df = pd.DataFrame(self.args['icn_log'])
+        icn_df.to_csv(osp.join(path, 'icn_scores.csv'), index=False)
+
+        icn_result = icn_df["best"].value_counts()
+        for model in self.args['icn_models']:
+            icn_result[f'mean_{model}'] = icn_df[model].mean()
+            icn_result[f'mean_{model}_diff'] = (icn_df[model] - icn_df['original']).mean()
+        icn_result['mean_original'] = icn_df['original'].mean()
+
+        icn_result = icn_result.to_json(osp.join(path, 'icn_scores.json'), orient='index', indent=4)
 
 
