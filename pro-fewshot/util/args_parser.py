@@ -42,7 +42,7 @@ def get_args():
 
     # ICN args
     parser.add_argument('--save_icn_scores', action='store_true')
-    parser.add_argument('--icn_models', type=str, default='pca,isomap,kernel_pca,truncated_svd,feature_agg,fast_ica,nmf')
+    parser.add_argument('--icn_models', type=str, default='pca,isomap')
     parser.add_argument('--icn_reduction_set', type=str, default='support', choices=['support', 'all'])
     parser.add_argument('--icn_reduction_type', type=str, default='unsupervised', choices=['supervised', 'unsupervised'])
 
