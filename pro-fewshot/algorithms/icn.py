@@ -1,6 +1,9 @@
 import torch
 import numpy as np
 
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
+
 from sklearn.neighbors import NearestNeighbors
 
 class ICN():
@@ -24,16 +27,42 @@ class ICN():
 
         if 'pca' in args.icn_models:
             from sklearn.decomposition import PCA
-            pca_model = {'model': PCA, 'args': {'n_components': n_components}, 'name':'pca'}
+            pca_model = {'model': PCA, 'args': {'n_components': n_components}, 'name':'pca', 'n_components': n_components}
             models.append(pca_model)
 
         if 'isomap' in args.icn_models:
             from sklearn.manifold import Isomap
-            isomap_model = {'model': Isomap, 'args': {'n_components': n_components, 'n_neighbors': n_neighbors}, 'name':'isomap'}
+            isomap_model = {'model': Isomap, 'args': {'n_components': n_components, 'n_neighbors': n_neighbors}, 'name':'isomap', 'n_components': n_components}
             models.append(isomap_model)
-        
+
+        if 'kernel_pca' in args.icn_models:
+            from sklearn.decomposition import KernelPCA
+            kernelpca_model = {'model': KernelPCA, 'args': {'n_components': n_components, 'kernel': 'rbf'}, 'name':'kernel_pca', 'n_components': n_components}
+            models.append(kernelpca_model)
+
+        if 'truncated_svd' in args.icn_models:
+            from sklearn.decomposition import TruncatedSVD
+            truncatedsvd_model = {'model': TruncatedSVD, 'args': {'n_components': n_components}, 'name':'truncated_svd', 'n_components': n_components}
+            models.append(truncatedsvd_model)
+
+        if 'feature_agg' in args.icn_models:
+            from sklearn.cluster import FeatureAgglomeration
+            featureagg_model = {'model': FeatureAgglomeration, 'args': {'n_clusters': n_components }, 'name':'feature_agg', 'n_components': n_components}
+            models.append(featureagg_model)
+
+        if 'fast_ica' in args.icn_models:
+            from sklearn.decomposition import FastICA
+            fast_ica_model = {'model': FastICA, 'args': {'n_components': n_components }, 'name':'fast_ica', 'n_components': n_components}
+            models.append(fast_ica_model)
+
+        if 'nmf' in args.icn_models:
+            from sklearn.decomposition import NMF
+            nmf_model = {'model': NMF, 'args': {'n_components': n_components, 'init': 'nndsvda' }, 'name':'nmf', 'n_components': n_components}
+            models.append(nmf_model)
+            
         return models
 
+    @ignore_warnings(category=ConvergenceWarning)
     def transform(self, supp_fts, query_fts):
         X = supp_fts.cpu().detach().numpy()
         y = np.arange(0, self.args.way, 1/self.args.shot).astype(int)
@@ -59,7 +88,7 @@ class ICN():
                 best['score'] = score
                 best['embeddings'] = embeddings
                 best['reducer'] = reducer
-                best['n_components'] = m['args']['n_components']
+                best['n_components'] = m['n_components']
                 best['name'] = m['name']
 
         # Select best model
