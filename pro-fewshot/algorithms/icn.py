@@ -74,7 +74,7 @@ class ICN():
         # Set X (data used to generate the feature reduction) and y (support data labels)
         if self.args.icn_reduction_set == 'all':
             X = np.concatenate((support, query))
-        elif self.args.icn_reduction_set == 'support':
+        elif self.args.icn_reduction_set == 'support' or self.args.icn_reduction_type == 'supervised':
             X = support
 
         y = np.arange(0, self.args.way, 1/self.args.shot).astype(int)
@@ -91,7 +91,11 @@ class ICN():
 
         # Evaluate feature reductor models
         for m in self.models:
-            reducer = m['model'](**m['args']).fit(X)
+            if self.args.icn_reduction_type == 'unsupervised':
+                reducer = m['model'](**m['args']).fit(X)
+            elif self.args.icn_reduction_type == 'supervised':
+                reducer = m['model'](**m['args']).fit(X, y=y)
+
             embeddings = reducer.transform(support)
             score = self._score(embeddings, y)
 
