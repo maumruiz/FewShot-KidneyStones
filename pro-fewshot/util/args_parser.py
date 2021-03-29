@@ -45,7 +45,8 @@ def get_args():
     parser.add_argument('--icn_models', type=str, default='pca,isomap')
     parser.add_argument('--icn_reduction_set', type=str, default='support', choices=['support', 'all'])
     parser.add_argument('--icn_reduction_type', type=str, default='unsupervised', choices=['supervised', 'unsupervised'])
-
+    parser.add_argument('--icn_multiple_components', action='store_true')
+    parser.add_argument('--icn_n_dims', type=int, default=6)
 
     return parser.parse_args()
 
@@ -71,6 +72,8 @@ def process_args(args):
         del args.icn_models
         del args.icn_reduction_set
         del args.icn_reduction_type
+        del args.icn_multiple_components
+        del args.icn_n_dims
     else:
         args.icn_models = args.icn_models.split(',') if args.icn_models else []
 
@@ -92,8 +95,23 @@ def init_saving_features(args):
     args.fts_labels = []
 
 def init_saving_icn_scores(args):
+    if args.backbone == 'ConvNet':
+        hdim = 64
+    elif args.backbone == 'ResNet12':
+        hdim = 640
+    elif args.backbone == 'ResNet18':
+        hdim = 640
+    components_list = []
+    if args.icn_multiple_components:
+        for _ in range(args.icn_n_dims):
+            hdim = hdim // 2
+            components_list.append(hdim)
+    else:
+        components_list.append(args.icn_n_dims)
+
     args.icn_log = {}
     args.icn_log['original'] = []
     for model in args.icn_models:
-        args.icn_log[model] = []
+        for n_components in components_list:
+            args.icn_log[f'{model}_{n_components}dims'] = []
     args.icn_log['best'] = []

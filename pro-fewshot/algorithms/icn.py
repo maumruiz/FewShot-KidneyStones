@@ -20,48 +20,73 @@ class ICN():
         elif self.args.icn_reduction_set == 'support':
             task_samples = supp_samples
 
-        models = []
-        n_components = 6
-        n_neighbors = 6
+        if args.backbone == 'ConvNet':
+            hdim = 64
+        elif args.backbone == 'ResNet12':
+            hdim = 640
+        elif args.backbone == 'ResNet18':
+            hdim = 640
 
-        if n_components >= task_samples:
-            n_components = task_samples - 2
-            n_neighbors = n_components
+
+        components_list = []
+        if args.icn_multiple_components:
+            for _ in range(args.icn_n_dims):
+                hdim = hdim // 2
+                components_list.append(hdim)
+        else:
+            components_list.append(args.icn_n_dims)
+
+        models = []
 
         if 'pca' in args.icn_models:
             from sklearn.decomposition import PCA
-            pca_model = {'model': PCA, 'args': {'n_components': n_components}, 'name':'pca', 'n_components': n_components}
-            models.append(pca_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                pca_model = {'model': PCA, 'args': {'n_components': n_components}, 'name':'pca', 'n_components': n_components}
+                models.append(pca_model)
 
         if 'isomap' in args.icn_models:
             from sklearn.manifold import Isomap
-            isomap_model = {'model': Isomap, 'args': {'n_components': n_components, 'n_neighbors': n_neighbors}, 'name':'isomap', 'n_components': n_components}
-            models.append(isomap_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                n_neighbors = n_components if n_components < 5 else 5
+                isomap_model = {'model': Isomap, 'args': {'n_components': n_components, 'n_neighbors': n_neighbors}, 'name':'isomap', 'n_components': n_components}
+                models.append(isomap_model)
 
         if 'kernel_pca' in args.icn_models:
             from sklearn.decomposition import KernelPCA
-            kernelpca_model = {'model': KernelPCA, 'args': {'n_components': n_components, 'kernel': 'rbf'}, 'name':'kernel_pca', 'n_components': n_components}
-            models.append(kernelpca_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                kernelpca_model = {'model': KernelPCA, 'args': {'n_components': n_components, 'kernel': 'rbf'}, 'name':'kernel_pca', 'n_components': n_components}
+                models.append(kernelpca_model)
 
         if 'truncated_svd' in args.icn_models:
             from sklearn.decomposition import TruncatedSVD
-            truncatedsvd_model = {'model': TruncatedSVD, 'args': {'n_components': n_components}, 'name':'truncated_svd', 'n_components': n_components}
-            models.append(truncatedsvd_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                truncatedsvd_model = {'model': TruncatedSVD, 'args': {'n_components': n_components}, 'name':'truncated_svd', 'n_components': n_components}
+                models.append(truncatedsvd_model)
 
         if 'feature_agg' in args.icn_models:
             from sklearn.cluster import FeatureAgglomeration
-            featureagg_model = {'model': FeatureAgglomeration, 'args': {'n_clusters': n_components }, 'name':'feature_agg', 'n_components': n_components}
-            models.append(featureagg_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                featureagg_model = {'model': FeatureAgglomeration, 'args': {'n_clusters': n_components }, 'name':'feature_agg', 'n_components': n_components}
+                models.append(featureagg_model)
 
         if 'fast_ica' in args.icn_models:
             from sklearn.decomposition import FastICA
-            fast_ica_model = {'model': FastICA, 'args': {'n_components': n_components }, 'name':'fast_ica', 'n_components': n_components}
-            models.append(fast_ica_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                fast_ica_model = {'model': FastICA, 'args': {'n_components': n_components }, 'name':'fast_ica', 'n_components': n_components}
+                models.append(fast_ica_model)
 
         if 'nmf' in args.icn_models:
             from sklearn.decomposition import NMF
-            nmf_model = {'model': NMF, 'args': {'n_components': n_components, 'init': 'nndsvda' }, 'name':'nmf', 'n_components': n_components}
-            models.append(nmf_model)
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                nmf_model = {'model': NMF, 'args': {'n_components': n_components, 'init': 'nndsvda' }, 'name':'nmf', 'n_components': n_components}
+                models.append(nmf_model)
             
         return models
 
@@ -100,7 +125,7 @@ class ICN():
             score = self._score(embeddings, y)
 
             if self.args.save_icn_scores:
-                self.args.icn_log[m['name']].append(score)
+                self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'].append(score)
 
             if score > best['score']:
                 best['score'] = score

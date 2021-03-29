@@ -117,11 +117,16 @@ class ExpLogger():
         icn_df.to_csv(osp.join(path, 'icn_scores.csv'), index=False)
 
         icn_result = icn_df["best"].value_counts()
-        for model in self.args['icn_models']:
-            icn_result[f'mean_{model}'] = icn_df[model].mean()
-            icn_result[f'mean_{model}_diff'] = (icn_df[model] - icn_df['original']).mean()
-        icn_result['mean_original'] = icn_df['original'].mean()
+        icn_means = icn_df.mean()
+        icn_diffs = icn_means - icn_means['original']
+        icn_diffs = icn_diffs.drop(labels=['original'])
 
-        icn_result = icn_result.to_json(osp.join(path, 'icn_scores.json'), orient='index', indent=4)
+        icn_result.index += '_count'
+        icn_means.index += '_mean'
+        icn_diffs.index += '_diff'
+        
+        icn_final = pd.concat([icn_result, icn_means, icn_diffs])
+
+        icn_result = icn_final.to_json(osp.join(path, 'icn_scores.json'), orient='index', indent=4)
 
 
