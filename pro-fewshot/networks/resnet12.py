@@ -1,8 +1,5 @@
 import torch.nn as nn
 
-from .models import register
-
-
 def conv3x3(in_planes, out_planes):
     return nn.Conv2d(in_planes, out_planes, 3, padding=1, bias=False)
 
@@ -93,7 +90,7 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-        x = x.view(x.shape[0], x.shape[1], -1).mean(dim=2)
+        # x = x.view(x.shape[0], x.shape[1], -1).mean(dim=2)
         return x
 
 

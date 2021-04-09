@@ -98,7 +98,7 @@ def init_saving_icn_scores(args):
     if args.backbone == 'ConvNet':
         hdim = 64
     elif args.backbone == 'ResNet12':
-        hdim = 640
+        hdim = 512
     elif args.backbone == 'ResNet18':
         hdim = 640
     components_list = []
