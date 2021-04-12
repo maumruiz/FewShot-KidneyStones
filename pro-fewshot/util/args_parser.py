@@ -30,7 +30,7 @@ def get_args():
     parser.add_argument('--save_path', type=str, default='runs')
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seed', type=int, default=1234)
-    parser.add_argument('--exp_num', type=int, default=1)
+    parser.add_argument('--exp_num', type=int, default=99)
 
     # CTM args
     parser.add_argument('--ctm_blocks', type=int, default=4)
