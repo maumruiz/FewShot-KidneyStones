@@ -1,0 +1,5 @@
+__pycache__/
+.vscode
+save/*
+materials/mini-imagenet
+materials/tiered-imagenet
