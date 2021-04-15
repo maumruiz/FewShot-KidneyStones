@@ -5,6 +5,7 @@ import random
 import torch
 
 def set_gpu(x):
+    print(f'### Setting gpu: {x}')
     os.environ['CUDA_VISIBLE_DEVICES'] = x
 
 def ensure_path(path, remove=True):

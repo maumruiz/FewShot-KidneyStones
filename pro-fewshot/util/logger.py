@@ -22,7 +22,7 @@ class ExpLogger():
         
         arg_keys = ['dataset', 'model', 'modules', 'backbone', 'way', 'train_way', 
         'shot', 'query', 'max_epoch', 'train_epi', 'val_epi', 'test_epi', 'lr', 'step_size',
-        'gamma', 'temperature', 'init_weights', 'step_size', 'save_path', 'seed', 'exp_num']
+        'gamma', 'temperature', 'init_weights', 'step_size', 'save_path', 'seed', 'tag']
 
         if 'CTM' in self.args['modules']:
             arg_keys += ['ctm_blocks', 'ctm_out_channels', 'ctm_block_type', 
@@ -70,7 +70,7 @@ class ExpLogger():
 
         
         results_df = pd.DataFrame()
-        results_df['exp_num'] = [self.args['exp_num']]
+        results_df['tag'] = [self.args['tag']]
         results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['backbone']}"]
         results_df['way'] = [self.args['way']]
         results_df['shot'] = [self.args['shot']]

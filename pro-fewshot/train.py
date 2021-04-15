@@ -93,7 +93,6 @@ if __name__ == '__main__':
     
 
     print('###### Training ######')
-    global_count = 0
     real_way = args.way
 
     train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 
@@ -105,17 +104,16 @@ if __name__ == '__main__':
         train_acc = Averager()
         args.way = args.train_way
         
-        train_batches = tqdm.tqdm(train_loader)
+        train_batches = tqdm.tqdm(train_loader, dynamic_ncols=True)
         for batch in train_batches:
-            global_count += 1
             data = batch[0].cuda()
             logits = model(data)
             loss = F.cross_entropy(logits, train_label)
             acc = count_acc(logits, train_label)
 
-            writer.add_scalar('data/loss', float(loss), global_count)
-            writer.add_scalar('data/acc', float(acc), global_count)
-            train_batches.set_description(f'Training   | Epoch {epoch} | loss={loss.item():.4f} | acc={acc:.4f} |')
+            writer.add_scalar('data/loss', float(loss), epoch)
+            writer.add_scalar('data/acc', float(acc), epoch)
+            train_batches.set_description(f'TRAIN | Epoch {epoch} | Loss={loss.item():.4f} | Acc={acc*100:.2f} |')
 
             train_loss.add(loss.item())
             train_acc.add(acc)
@@ -132,7 +130,7 @@ if __name__ == '__main__':
         args.way = real_way
         
         with torch.no_grad():
-            val_batches = tqdm.tqdm(val_loader)
+            val_batches = tqdm.tqdm(val_loader, dynamic_ncols=True)
             for batch in val_batches:
                 data = batch[0].cuda()
                 logits = model(data)
@@ -140,7 +138,7 @@ if __name__ == '__main__':
                 acc = count_acc(logits, label)    
                 val_loss.add(loss.item())
                 val_acc.add(acc)
-                val_batches.set_description(f'Validation | Epoch {epoch} | loss={val_loss.item():.4f} | acc={val_acc.item():.4f} |')
+                val_batches.set_description(f'VAL   | Epoch {epoch} | Loss={val_loss.item():.4f} | Acc={val_acc.item()*100:.2f} |')
 
         val_loss = val_loss.item()
         val_acc = val_acc.item()
@@ -188,7 +186,7 @@ if __name__ == '__main__':
         init_saving_icn_scores(args)
 
     with torch.no_grad():
-        test_batches = tqdm.tqdm(loader)
+        test_batches = tqdm.tqdm(loader, dynamic_ncols=True)
         for i, batch in enumerate(test_batches, 1):
             data = batch[0].cuda()
             logits = model(data)
@@ -202,7 +200,7 @@ if __name__ == '__main__':
             test_acc_record[i-1] = acc
             explog.test_acc.append(acc)
 
-            test_batches.set_description(f'Testing | Acc={acc * 100} | Avg acc={ave_acc.item() * 100} |')
+            test_batches.set_description(f'Testing | Avg acc={ave_acc.item() * 100:.2f} |')
         
     m, pm = compute_confidence_interval(test_acc_record)
     print(f'Test Acc {m:.4f} + {pm:.4f}')
