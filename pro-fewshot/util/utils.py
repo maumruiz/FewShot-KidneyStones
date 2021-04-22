@@ -39,20 +39,14 @@ class Averager():
 
 class Timer:
     def __init__(self):
-        self._start_time = None
+        self._start_time = time.perf_counter()
 
     def start(self):
         """Start a new timer"""
-        if self._start_time is not None:
-            raise TimerError(f"Timer is running. Use .stop() to stop it")
-
         self._start_time = time.perf_counter()
 
     def stop(self):
         """Stop the timer, and report the elapsed time"""
-        if self._start_time is None:
-            raise TimerError(f"Timer is not running. Use .start() to start it")
-
         s = time.perf_counter() - self._start_time
         self._start_time = None
 
@@ -70,3 +64,18 @@ class Timer:
 
         # print(f"Elapsed time: {h:d}:{m:02d}:{s:02d}")
         return f'{h:d}:{m:02d}:{s:02d}'
+
+    def elapsed(self):
+        elapsed = time.perf_counter() - self._start_time
+        return self._time_to_str(elapsed)
+
+    def estimate(self, epoch, max_epoch):
+        estimated_time = (time.perf_counter() - self._start_time) / epoch * max_epoch
+        return self._time_to_str(estimated_time)
+
+    def _time_to_str(self, t):
+        if t >= 3600:
+            return '{:.1f}h'.format(t / 3600)
+        if t >= 60:
+            return '{:.1f}m'.format(t / 60)
+        return '{:.1f}s'.format(t)

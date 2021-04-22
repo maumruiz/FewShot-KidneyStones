@@ -98,13 +98,17 @@ if __name__ == '__main__':
     train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 
     label = torch.arange(0, args.way, 1 / args.query).long().cuda()
 
+    timer_trainval = Timer()
+    timer_epoch = Timer()
+
     for epoch in range(1, args.max_epoch + 1):
+        timer_epoch.start()
         model.train()
         train_loss = Averager()
         train_acc = Averager()
         args.way = args.train_way
         
-        train_batches = tqdm.tqdm(train_loader, dynamic_ncols=True)
+        train_batches = tqdm.tqdm(train_loader, dynamic_ncols=True, leave=False)
         for batch in train_batches:
             data = batch[0].cuda()
             logits = model(data)
@@ -130,7 +134,7 @@ if __name__ == '__main__':
         args.way = real_way
         
         with torch.no_grad():
-            val_batches = tqdm.tqdm(val_loader, dynamic_ncols=True)
+            val_batches = tqdm.tqdm(val_loader, dynamic_ncols=True, leave=False)
             for batch in val_batches:
                 data = batch[0].cuda()
                 logits = model(data)
@@ -145,13 +149,26 @@ if __name__ == '__main__':
         writer.add_scalar('data/val_loss', float(val_loss), epoch)
         writer.add_scalar('data/val_acc', float(val_acc), epoch)        
 
+        log_str = f'Epoch {epoch:2d} | TRAIN (Loss: {train_loss.item():.4f}, Acc: {train_acc.item()*100:.2f}) | VAL (Loss: {val_loss:.4f}, Acc: {val_acc*100:.4f})'
+
+        t_epoch = timer_epoch.elapsed()
+        t_trainval = timer_trainval.elapsed()
+        t_estimate = timer_trainval.estimate(epoch, args.max_epoch)
+        log_str += f' | TIME (Epoch: {t_epoch}, Estimate: {t_trainval}/{t_estimate})'
+
         if val_acc > explog.max_acc:
             explog.max_acc = val_acc
             explog.max_acc_epoch = epoch
             torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
-            print(f'-------- New best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f} --------')
+            log_str += ' ---- NEW BEST EPOCH ----'
+            # print(f'-------- New best epoch: {explog.max_acc_epoch} | Best val acc={explog.max_acc:.4f} --------')
 
-        print(f'---------------------------------------------------------')
+        print(log_str)
+                # 'val {:.4f}|{:.4f}, {} {}/{} (@{})'.format(
+                # epoch, aves['tl'], aves['ta'], aves['tvl'], aves['tva'],
+                # aves['vl'], aves['va'], t_epoch, t_used, t_estimate, _sig))
+
+        # print(f'---------------------------------------------------------')
 
         explog.train_loss.append(train_loss.item())
         explog.train_acc.append(train_acc.item())
@@ -186,7 +203,7 @@ if __name__ == '__main__':
         init_saving_icn_scores(args)
 
     with torch.no_grad():
-        test_batches = tqdm.tqdm(loader, dynamic_ncols=True)
+        test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
         for i, batch in enumerate(test_batches, 1):
             data = batch[0].cuda()
             logits = model(data)
@@ -203,7 +220,7 @@ if __name__ == '__main__':
             test_batches.set_description(f'Testing | Avg acc={ave_acc.item() * 100:.2f} |')
         
     m, pm = compute_confidence_interval(test_acc_record)
-    print(f'Test Acc {m:.4f} + {pm:.4f}')
+    print(f'TEST Acc {m:.4f} +- {pm:.4f}')
     explog.mean_acc = m
 
     elapsed_time = timer.stop()
