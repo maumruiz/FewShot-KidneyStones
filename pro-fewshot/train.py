@@ -10,18 +10,14 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import FewShotSampler
-from util.utils import set_gpu, Averager, Timer, set_seed
+from util.utils import set_gpu, Averager, Timer, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
 from util.logger import ExpLogger
 
 
-if __name__ == '__main__':
-    
-    print('###### Start experiment with args: ######')
-    args = get_args()
-    process_args(args)
-    print_args(args)
+
+def main(args):
 
     set_seed(args.seed)
     set_gpu(args.gpu)
@@ -74,9 +70,8 @@ if __name__ == '__main__':
             pretrained_dict = model_detail['model']
             pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}
         model_dict.update(pretrained_dict)
-    model.load_state_dict(model_dict)    
+    model.load_state_dict(model_dict)
     model = model.cuda()
-    # model = torch.nn.DataParallel(model.cuda())
 
     explog.parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
@@ -111,6 +106,7 @@ if __name__ == '__main__':
         train_batches = tqdm.tqdm(train_loader, dynamic_ncols=True, leave=False)
         for batch in train_batches:
             data = batch[0].cuda()
+            
             logits = model(data)
             loss = F.cross_entropy(logits, train_label)
             acc = count_acc(logits, train_label)
@@ -136,7 +132,11 @@ if __name__ == '__main__':
         with torch.no_grad():
             val_batches = tqdm.tqdm(val_loader, dynamic_ncols=True, leave=False)
             for batch in val_batches:
-                data = batch[0].cuda()
+                try:
+                    data = batch[0].cuda()
+                except Exception as inst:
+                    handle_error(inst)
+                
                 logits = model(data)
                 loss = F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)    
@@ -206,6 +206,7 @@ if __name__ == '__main__':
         test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
         for i, batch in enumerate(test_batches, 1):
             data = batch[0].cuda()
+            
             logits = model(data)
             acc = count_acc(logits, label)
 
@@ -239,3 +240,17 @@ if __name__ == '__main__':
         explog.save_icnn_scores(args.save_path)
     
     print(f"Elapsed time: {elapsed_time}")
+
+if __name__ == '__main__':
+    print('###### Start experiment with args: ######')
+    args = get_args()
+    process_args(args)
+    print_args(args)
+    try:
+        main(args)
+    except Exception as inst:
+        print('----------------------')
+        print("Oops!! Something went wrong!")
+        print(f'{type(inst).__name__}: {inst}')    # the exception instance
+        delete_path(args.save_path)
+        raise

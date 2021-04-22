@@ -81,7 +81,8 @@ def process_args(args):
         args.icn_models = args.icn_models.split(',') if args.icn_models else []
 
     gmt = time.localtime() 
-    timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
+    # timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
+    timestmp = f'{gmt.tm_mon:02d}{gmt.tm_mday:02d}-{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
     path1 = [args.dataset, args.model, args.backbone] + args.modules
     save_path1 = "-".join(path1)
     save_path2 = f'{args.way}way{args.shot}shot_{args.tag:02d}_{timestmp}'

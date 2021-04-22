@@ -16,6 +16,10 @@ def ensure_path(path, remove=True):
     else:
         os.makedirs(path)
 
+def delete_path(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
 def set_seed(seed):
     """
     Set the random seed
