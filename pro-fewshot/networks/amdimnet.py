@@ -85,7 +85,7 @@ class AmdimNet(nn.Module):
         r1 = self.rkhs_block_1(acts[self.dim2layer[1]])
         #r5 = self.rkhs_block_5(acts[self.dim2layer[5]])
         #r7 = self.rkhs_block_7(acts[self.dim2layer[7]])
-        r1 = r1.view(r1.size(0), -1)
+        # r1 = r1.view(r1.size(0), -1)
         return r1
 
 

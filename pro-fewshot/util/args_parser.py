@@ -8,7 +8,7 @@ def get_args():
     parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
     parser.add_argument('--model', type=str, default='ProtoNet', choices=['ProtoNet', 'Classifier'])
     parser.add_argument('--modules', type=str)
-    parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18'])
+    parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18', 'AmdimNet'])
     parser.add_argument('--way', type=int, default=5)
     parser.add_argument('--train_way', type=int, default=5)
     parser.add_argument('--shot', type=int, default=1)
@@ -17,7 +17,7 @@ def get_args():
     parser.add_argument('--train_epi', type=int, default=100)
     parser.add_argument('--val_epi', type=int, default=500)
     parser.add_argument('--test_epi', type=int, default=1000)
-    parser.add_argument('--lr', type=float, default=0.001)
+    parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--step_size', type=int, default=20)
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
@@ -27,11 +27,16 @@ def get_args():
     # CUB, ConvNet, './saves/initialization/cub/con-pre.pth'
     parser.add_argument('--init_weights', type=str, default=None)
 
-    parser.add_argument('--save_features', action='store_true')
     parser.add_argument('--save_path', type=str, default='runs')
+    parser.add_argument('--save_features', action='store_true')
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seed', type=int, default=1234)
     parser.add_argument('--tag', type=int, default=99)
+
+    # AMDIM Modelrd
+    parser.add_argument('--ndf', type=int, default=192)
+    parser.add_argument('--rkhs', type=int, default=1536)
+    parser.add_argument('--nd', type=int, default=8)
 
     # CTM args
     parser.add_argument('--ctm_blocks', type=int, default=4)

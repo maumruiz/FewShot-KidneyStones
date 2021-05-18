@@ -132,10 +132,7 @@ def main(args):
         with torch.no_grad():
             val_batches = tqdm.tqdm(val_loader, dynamic_ncols=True, leave=False)
             for batch in val_batches:
-                try:
-                    data = batch[0].cuda()
-                except Exception as inst:
-                    handle_error(inst)
+                data = batch[0].cuda()
                 
                 logits = model(data)
                 loss = F.cross_entropy(logits, label)

@@ -26,6 +26,9 @@ class ProtoNet(nn.Module):
         else:
             raise ValueError('Encoder doesnt exist')
 
+        if args.parallel:
+            self.encoder = torch.nn.DataParallel(self.encoder)
+
         if 'CTM' in args.modules:
             from networks.ctm import CTM
             self.ctm = CTM(args, hdim)

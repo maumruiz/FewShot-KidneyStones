@@ -2,3 +2,4 @@ __pycache__/
 .vscode
 runs/
 runs_debug/
+pretrained/*.pth
