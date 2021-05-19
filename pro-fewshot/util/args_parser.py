@@ -9,6 +9,7 @@ def get_args():
     parser.add_argument('--model', type=str, default='ProtoNet', choices=['ProtoNet', 'Classifier'])
     parser.add_argument('--modules', type=str)
     parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18', 'AmdimNet'])
+    parser.add_argument('--optimizer', type=str, default='recommended', choices=['recommended', 'Adam', 'SGD'])
     parser.add_argument('--way', type=int, default=5)
     parser.add_argument('--train_way', type=int, default=5)
     parser.add_argument('--shot', type=int, default=1)

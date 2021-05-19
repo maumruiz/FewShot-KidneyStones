@@ -76,14 +76,23 @@ def main(args):
     explog.parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     print('###### Set optimizer ######')
-    if args.backbone == 'ConvNet':
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    elif 'ResNet' in args.backbone:
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-    elif args.backbone == 'AmdimNet':
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
+    if args.optimizer == 'recommended':
+        if args.backbone == 'ConvNet':
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        elif 'ResNet' in args.backbone:
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
+        elif args.backbone == 'AmdimNet':
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
+        else:
+            raise ValueError('No Such Encoder')
     else:
-        raise ValueError('No Such Encoder')
+        if args.optimizer == 'Adam':
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        elif args.optimizer == 'SGD':
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
+        else:
+            raise ValueError('No Such Optimizer')
+
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)  
     
 
