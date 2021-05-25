@@ -1,37 +1,26 @@
-import argparse
-import os.path as osp
-
 import numpy as np
+import tqdm
+
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from dataloader.samplers import CategoriesSampler
-from models.protonet import ProtoNet
-from util.utils import set_gpu, ensure_path, Averager, Timer
+import torch.backends.cudnn as cudnn
+
+from dataloader.samplers import FewShotSampler
+from util.utils import set_gpu, Averager, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
-from torch.utils.tensorboard import SummaryWriter
+from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
+from util.logger import ExpLogger
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--shot', type=int, default=1)
-    parser.add_argument('--query', type=int, default=15)
-    parser.add_argument('--way', type=int, default=5)
-    parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet', 'AmdimNet'])
-    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])    
-    parser.add_argument('--model_path', type=str, default=None)
-    parser.add_argument('--gpu', default='0')
-
-    ### AMDIM MODEL
-    parser.add_argument('--ndf', type=int, default=256)
-    parser.add_argument('--rkhs', type=int, default=2048)
-    parser.add_argument('--nd', type=int, default=10)
-
-    args = parser.parse_args()
-    args.temperature = 1 # we set temperature = 1 during test since it does not influence the results
-
+def main(args):
+    set_seed(args.seed)
     set_gpu(args.gpu)
-    
+    cudnn.benchmark = True
+
+    explog = ExpLogger(args)
+
+    print('###### Load data ######')
     if args.dataset == 'MiniImageNet':
         from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
@@ -41,39 +30,83 @@ if __name__ == '__main__':
     else:
         raise ValueError('Non-supported Dataset.')
 
-    model = ProtoNet(args)
-    if torch.cuda.is_available():
-        torch.backends.cudnn.benchmark = True
-        model = model.cuda()    
     test_set = Dataset('test', args)
-    sampler = CategoriesSampler(test_set.label, 10000, args.way, args.shot + args.query)
+    sampler = FewShotSampler(test_set.label, 10000, args.way, args.shot, args.query)
     loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)
-    test_acc_record = np.zeros((10000,))
 
-    model.load_state_dict(torch.load(args.model_path)['params'])
+    print('###### Create model ######')
+    if args.model == 'ProtoNet':
+        from models.protonet import ProtoNet as Model
+    else:
+        raise ValueError('Non-supported Model.')
+    model = Model(args)
+    
+    model_detail = torch.load(args.model_path)
+    if 'params' in model_detail:
+        model_dict = model_detail['params']
+    else:
+        model_dict = model.state_dict()
+        pretrained_dict = model_detail['model']
+        pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}
+        model_dict.update(pretrained_dict)
+    model.load_state_dict(model_dict)
+    
+    model = model.cuda()
     model.eval()
 
+    print('###### Training ######')
+    test_acc_record = np.zeros((args.test_epi,))
     ave_acc = Averager()
-    label = torch.arange(args.way).repeat(args.query)
-    if torch.cuda.is_available():
-        label = label.type(torch.cuda.LongTensor)
-    else:
-        label = label.type(torch.LongTensor)
+    label = torch.arange(0, args.way, 1 / args.query).long().cuda()
+
+    args.save_features = True
+    init_saving_features(args)
+    if 'ICN' in args.modules:
+        args.save_icn_scores = True
+        init_saving_icn_scores(args)
         
     with torch.no_grad():
-        for i, batch in enumerate(loader, 1):
-            if torch.cuda.is_available():
-                data, _ = [_.cuda() for _ in batch]
-            else:
-                data = batch[0]
-            k = args.way * args.shot
-            data_shot, data_query = data[:k], data[k:]
-    
-            logits = model(data_shot, data_query)
+        test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
+        for i, batch in enumerate(test_batches, 1):
+            data = batch[0].cuda()
+            logits = model(data)
             acc = count_acc(logits, label)
             ave_acc.add(acc)
             test_acc_record[i-1] = acc
-            print('batch {}: {:.2f}({:.2f})'.format(i, ave_acc.item() * 100, acc * 100))
+
+            if args.save_features:
+                args.fts_labels.append(batch[1][:args.way*args.shot])
+                args.fts_ids.append(batch[2][:args.way*args.shot])
+
+            explog.test_acc.append(acc)
+
+            test_batches.set_description(f'Testing | Avg acc={ave_acc.item() * 100:.2f} |')
         
     m, pm = compute_confidence_interval(test_acc_record)
     print('Test Acc {:.4f} + {:.4f}'.format(m, pm))
+    explog.mean_acc = m
+
+    print('###### Saving logs ######')
+    explog.save(args.save_path)
+    explog.save_json(args.save_path)
+    explog.save_csv(args.save_path)
+
+    if args.save_features:
+        explog.save_features(args.save_path)
+
+    if 'ICN' in args.modules and args.save_icn_scores:
+        explog.save_icnn_scores(args.save_path)
+
+if __name__ == '__main__':
+    print('###### Start experiment with args: ######')
+    args = get_args()
+    process_args(args)
+    print_args(args)
+    try:
+        main(args)
+    except Exception as inst:
+        print('----------------------')
+        print("Oops!! Something went wrong!")
+        print(f'{type(inst).__name__}: {inst}')    # the exception instance
+        delete_path(args.save_path)
+        raise
