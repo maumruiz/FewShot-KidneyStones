@@ -21,7 +21,7 @@ class ExpLogger():
         log = {}
         
         arg_keys = ['dataset', 'model', 'modules', 'backbone', 'way', 'train_way', 
-        'shot', 'query', 'max_epoch', 'train_epi', 'val_epi', 'test_epi', 'lr', 'step_size',
+        'shot', 'query', 'max_epoch', 'train_epi', 'val_epi', 'test_epi', 'optimizer', 'lr', 'step_size',
         'gamma', 'temperature', 'init_weights', 'step_size', 'save_path', 'seed', 'tag']
 
         if 'CTM' in self.args['modules']:
@@ -71,13 +71,13 @@ class ExpLogger():
         
         results_df = pd.DataFrame()
         results_df['tag'] = [self.args['tag']]
-        results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['backbone']}"]
-        results_df['way'] = [self.args['way']]
-        results_df['shot'] = [self.args['shot']]
-        results_df['queries'] = [self.args['query']]
-        results_df['train_way'] = [self.args['train_way']]
         results_df['max_val_acc'] = [self.max_acc]
         results_df['test_acc'] = [self.mean_acc]
+        results_df['optimizer'] = [self.args['optimizer']]
+        results_df['lr'] = [self.args['lr']]
+        results_df['step_size'] = [self.args['step_size']]
+        results_df['gamma'] = [self.args['gamma']]
+        results_df['temperature'] = [self.args['temperature']]
         results_df['num_parameters'] = [self.parameters]
         results_df['elapsed_time'] = [self.elapsed_time]
         results_df['train_epochs'] = [self.args['max_epoch']]
@@ -87,10 +87,11 @@ class ExpLogger():
         results_df['init_weights'] = [self.args['init_weights']]
         results_df['save_path'] = [self.args['save_path']]
         results_df['seed'] = [self.args['seed']]
-        results_df['lr'] = [self.args['lr']]
-        results_df['step_size'] = [self.args['step_size']]
-        results_df['gamma'] = [self.args['gamma']]
-        results_df['temperature'] = [self.args['temperature']]
+        results_df['way'] = [self.args['way']]
+        results_df['shot'] = [self.args['shot']]
+        results_df['queries'] = [self.args['query']]
+        results_df['train_way'] = [self.args['train_way']]
+        results_df['name'] = [f"{self.args['dataset']}-{self.args['model']}-{self.args['backbone']}"]
         
         results_df.to_csv(osp.join(path, 'results.csv'), index=False)
 
