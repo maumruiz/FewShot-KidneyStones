@@ -10,7 +10,7 @@ ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
 IMAGE_PATH = osp.join(ROOT_PATH, 'data/kidneystones/images')
 SPLIT_PATH = osp.join(ROOT_PATH, 'data/kidneystones/split')
 
-class MiniImageNet(Dataset):
+class KidneyStones(Dataset):
     """ Usage: 
     """
     def __init__(self, setname, args):

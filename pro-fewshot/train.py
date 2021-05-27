@@ -35,7 +35,9 @@ def main(args):
     elif args.dataset == 'CUB':
         from dataloader.cub import CUB as Dataset
     elif args.dataset == 'TieredImageNet':
-        from dataloader.tiered_imagenet import tieredImageNet as Dataset       
+        from dataloader.tiered_imagenet import tieredImageNet as Dataset
+    elif args.dataset == 'KidneyStones':
+        from dataloader.kidney_stones import KidneyStones as Dataset
     else:
         raise ValueError('Non-supported Dataset.')
 

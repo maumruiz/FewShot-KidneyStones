@@ -5,7 +5,7 @@ from util.utils import ensure_path
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet'])
+    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet', 'KidneyStones'])
     parser.add_argument('--model', type=str, default='ProtoNet', choices=['ProtoNet', 'Classifier'])
     parser.add_argument('--modules', type=str)
     parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18', 'AmdimNet'])
