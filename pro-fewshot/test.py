@@ -61,8 +61,9 @@ def main(args):
     ave_acc = Averager()
     label = torch.arange(0, args.way, 1 / args.query).long().cuda()
 
-    args.save_features = True
-    init_saving_features(args)
+    if args.save_features:
+        init_saving_features(args)
+        
     if 'ICN' in args.modules:
         args.save_icn_scores = True
         init_saving_icn_scores(args)
