@@ -65,8 +65,8 @@ def main(args):
         if 'params' in model_detail:
             pretrained_dict = model_detail['params']
             # remove weights for FC
-            pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
-            pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+            # pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
+            # pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
             print('Pretrained dict keys:')
             print(pretrained_dict.keys())
         else:
@@ -100,6 +100,7 @@ def main(args):
     
 
     print('###### Training ######')
+    max_acc_model = None
     real_way = args.way
 
     train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 
@@ -168,7 +169,8 @@ def main(args):
         if val_acc > explog.max_acc:
             explog.max_acc = val_acc
             explog.max_acc_epoch = epoch
-            torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
+            # torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
+            max_acc_model = dict(params=model.state_dict())
             log_str += ' ---- NEW BEST EPOCH ----'
 
         print(log_str)
@@ -178,13 +180,12 @@ def main(args):
         explog.val_loss.append(val_loss)
         explog.val_acc.append(val_acc)
 
-        explog.save(args.save_path)
-        torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
+        # explog.save(args.save_path)
+        # torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
 
         lr_scheduler.step()
         
     writer.close()
-    explog.save_json(args.save_path)
 
     elapsed_time = timer.stop()
     explog.elapsed_time = elapsed_time
@@ -196,8 +197,8 @@ def main(args):
     explog.save_results(args.save_path)
 
     if args.model_name:
-        explog.save_model(args.save_path, args.model_name)
-
+        torch.save(max_acc_model, osp.join('pretrained', f'{args.model_name}.pth'))
+        # explog.save_model(args.save_path, args.model_name)
 
     if args.save_features:
         explog.save_features(args.save_path)
