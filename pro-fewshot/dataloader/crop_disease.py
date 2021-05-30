@@ -7,8 +7,8 @@ import numpy as np
 
 THIS_PATH = osp.dirname(__file__)
 ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
-IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/CropDisease/images'))
-SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/CropDisease/split'))
+IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/CropDisease/images'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/CropDisease/split'))
 
 class CropDisease(Dataset):
     """ Usage: 
