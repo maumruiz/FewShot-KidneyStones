@@ -7,8 +7,8 @@ import numpy as np
 
 THIS_PATH = osp.dirname(__file__)
 ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
-DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets'))
-SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/Cross'))
+DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/Cross'))
 
 class Cross(Dataset):
     """ Usage: 
