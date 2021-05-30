@@ -7,9 +7,9 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 THIS_PATH = osp.dirname(__file__)
-ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..', '..'))
-IMAGE_PATH = osp.join(ROOT_PATH, 'data/cub/images')
-SPLIT_PATH = osp.join(ROOT_PATH, 'data/cub/split')
+ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
+IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/CUB/images'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/CUB/split'))
 
 # This is for the CUB dataset, which does not support the ResNet encoder now
 # It is notable, we assume the cub images are cropped based on the given bounding boxes

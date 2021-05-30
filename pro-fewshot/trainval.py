@@ -1,7 +1,6 @@
 import os.path as osp
-
+import shutil
 import tqdm
-import numpy as np
 
 import torch
 import torch.nn.functional as F
@@ -38,6 +37,8 @@ def main(args):
         from dataloader.tiered_imagenet import tieredImageNet as Dataset
     elif args.dataset == 'KidneyStones':
         from dataloader.kidney_stones import KidneyStones as Dataset
+    elif args.dataset == 'Cross':
+        from dataloader.cross import Cross as Dataset
     else:
         raise ValueError('Non-supported Dataset.')
 
@@ -185,57 +186,18 @@ def main(args):
     writer.close()
     explog.save_json(args.save_path)
 
-
-    print('###### Testing ######')
-    test_set = Dataset('test', args)
-    sampler = FewShotSampler(test_set.label, args.test_epi, args.way, args.shot, args.query)
-    loader = DataLoader(test_set, batch_sampler=sampler, num_workers=2, pin_memory=True)
-    test_acc_record = np.zeros((args.test_epi,))
-
-    model.load_state_dict(torch.load(osp.join(args.save_path, 'max_acc' + '.pth'))['params'])
-    model.eval()
-
-    ave_acc = Averager()
-
-    if args.save_features:
-        init_saving_features(args)
-
-    if 'ICN' in args.modules:
-        args.save_icn_scores = True
-        init_saving_icn_scores(args)
-
-    with torch.no_grad():
-        test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
-        for i, batch in enumerate(test_batches, 1):
-            data = batch[0].cuda()
-            
-            logits = model(data)
-            acc = count_acc(logits, label)
-
-            if args.save_features:
-                args.fts_labels.append(batch[1][:args.way*args.shot])
-                args.fts_ids.append(batch[2][:args.way*args.shot])
-            
-            ave_acc.add(acc)
-            test_acc_record[i-1] = acc
-            explog.test_acc.append(acc)
-
-            test_batches.set_description(f'Testing | Avg acc={ave_acc.item() * 100:.2f} |')
-        
-    m, pm = compute_confidence_interval(test_acc_record)
-    print(f'TEST Acc {m:.4f} +- {pm:.4f}')
-    explog.mean_acc = m
-
     elapsed_time = timer.stop()
     explog.elapsed_time = elapsed_time
 
 
     print('###### Saving logs ######')
-    explog.save(args.save_path)
     explog.save_json(args.save_path)
     explog.save_trainval(args.save_path)
-    explog.save_test(args.save_path)
     explog.save_results(args.save_path)
+
+    if args.model_name:
+        explog.save_model(args.save_path, args.model_name)
+
 
     if args.save_features:
         explog.save_features(args.save_path)

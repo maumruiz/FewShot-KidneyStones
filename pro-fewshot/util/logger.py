@@ -2,6 +2,7 @@ import os.path as osp
 import json
 import torch
 import pandas as pd
+import shutil
 
 class ExpLogger():
     def __init__(self, args):
@@ -31,6 +32,9 @@ class ExpLogger():
         if 'ICN' in self.args['modules']:
             arg_keys += ['icn_models', 'icn_reduction_set', 'icn_reduction_type']
 
+        if 'dataset' == 'Cross':
+            arg_keys += ['cross_ds']
+
         log['args'] = {k: self.args[k] for k in arg_keys}
         log['train_loss'] = self.train_loss
         log['train_acc'] = self.train_acc
@@ -54,7 +58,7 @@ class ExpLogger():
         with open(osp.join(path, 'experiment.json'), "w") as write_file:
             json.dump(log, write_file, indent=4)
 
-    def save_csv(self, path):
+    def save_trainval(self, path):
         trainval_df = pd.DataFrame()
         trainval_df['epoch'] = [e+1 for e in range(len(self.train_loss))]
         trainval_df['train_loss'] = self.train_loss
@@ -63,12 +67,13 @@ class ExpLogger():
         trainval_df['val_acc'] = self.val_acc
         trainval_df.to_csv(osp.join(path, 'trainval.csv'))
 
+    def save_test(self, path):
         test_df = pd.DataFrame()
         test_df['batch'] = [e+1 for e in range(len(self.test_acc))]
         test_df['acc'] = self.test_acc
         test_df.to_csv(osp.join(path, 'test.csv'))
 
-        
+    def save_results(self, path):       
         results_df = pd.DataFrame()
         results_df['tag'] = [self.args['tag']]
         results_df['max_val_acc'] = [self.max_acc]
@@ -96,7 +101,6 @@ class ExpLogger():
         results_df.to_csv(osp.join(path, 'results.csv'), index=False)
 
     def save_features(self, path):
-
         # ICN save different sizes of features
         max_dim = max([x.size(1) for x in self.args['features']])
         features = torch.cat(
@@ -129,5 +133,17 @@ class ExpLogger():
         icn_final = pd.concat([icn_result, icn_means, icn_diffs])
 
         icn_result = icn_final.to_json(osp.join(path, 'icn_scores.json'), orient='index', indent=4)
+
+    def save_model(self, path, name):
+        if not osp.exists(f'pretrained/{name}.pth'):
+            shutil.copy(f'{path}/max_acc.pth', f'pretrained/{name}.pth')
+        else:
+            ii = 2
+            new_name = f'pretrained/{name}{ii}.pth'
+            while osp.exists(new_name):
+                ii += 1
+                new_name = f'pretrained/{name}{ii}.pth'
+            shutil.copy(f'{path}/max_acc.pth', new_name)
+            
 
 

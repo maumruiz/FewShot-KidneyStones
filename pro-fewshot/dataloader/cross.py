@@ -7,30 +7,36 @@ import numpy as np
 
 THIS_PATH = osp.dirname(__file__)
 ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
-IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/MiniImagenet/images'))
-SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/MiniImagenet/split'))
+DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/Cross'))
 
-class MiniImageNet(Dataset):
+class Cross(Dataset):
     """ Usage: 
     """
     def __init__(self, setname, args):
-        csv_path = osp.join(SPLIT_PATH, setname + '.csv')
-        lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
+
+        datasets = args.cross_ds.split(',')
+
+        if len(datasets) == 1 and 'ISIC' in datasets:
+            datasets.append('KidneyStones')
 
         data = []
         label = []
         lb = -1
-
         self.wnids = []
 
-        for l in lines:
-            name, wnid = l.split(',')
-            path = osp.join(IMAGE_PATH, name)
-            if wnid not in self.wnids:
-                self.wnids.append(wnid)
-                lb += 1
-            data.append(path)
-            label.append(lb)
+        for dataset in datasets:
+            csv_path = osp.join(SPLIT_PATH, f'{dataset}_{setname}.csv')
+            lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
+
+            for l in lines:
+                name, wnid = l.split(',')
+                path = osp.join(DATASETS_PATH, dataset, 'images', name)
+                if wnid not in self.wnids:
+                    self.wnids.append(wnid)
+                    lb += 1
+                data.append(path)
+                label.append(lb)
 
         self.data = data
         self.label = label

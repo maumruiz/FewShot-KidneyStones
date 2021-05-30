@@ -90,9 +90,9 @@ def main(args):
     explog.mean_acc = m
 
     print('###### Saving logs ######')
-    explog.save(args.save_path)
     explog.save_json(args.save_path)
-    explog.save_csv(args.save_path)
+    explog.save_test(args.save_path)
+    explog.save_results(args.save_path)
 
     if args.save_features:
         explog.save_features(args.save_path)

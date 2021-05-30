@@ -5,7 +5,7 @@ from util.utils import ensure_path
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet', 'KidneyStones'])
+    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet', 'KidneyStones', 'Cross'])
     parser.add_argument('--model', type=str, default='ProtoNet', choices=['ProtoNet', 'Classifier'])
     parser.add_argument('--modules', type=str)
     parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18', 'AmdimNet'])
@@ -17,11 +17,13 @@ def get_args():
     parser.add_argument('--max_epoch', type=int, default=200)
     parser.add_argument('--train_epi', type=int, default=100)
     parser.add_argument('--val_epi', type=int, default=500)
-    parser.add_argument('--test_epi', type=int, default=10000)
+    parser.add_argument('--test_epi', type=int, default=1000)
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--step_size', type=int, default=20)
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
+    parser.add_argument('--cross_ds', type=str)
+    parser.add_argument('--model_name', type=str)
 
     # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
     # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
@@ -86,6 +88,11 @@ def process_args(args):
         del args.icn_n_dims
     else:
         args.icn_models = args.icn_models.split(',') if args.icn_models else []
+
+    if args.backbone != 'AmdimNet':
+        del args.ndf
+        del args.rkhs
+        del args.nd
 
     gmt = time.localtime() 
     # timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
