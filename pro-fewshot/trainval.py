@@ -67,8 +67,8 @@ def main(args):
             # remove weights for FC
             # pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
             # pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-            print('Pretrained dict keys:')
-            print(pretrained_dict.keys())
+            # print('Pretrained dict keys:')
+            # print(pretrained_dict.keys())
         else:
             pretrained_dict = model_detail['model']
             pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}
