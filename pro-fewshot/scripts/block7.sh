@@ -1,0 +1,3 @@
+python trainval.py --way 5 --shot 5 --gpu $1 --dataset Cross --cross_ds CropDisease --backbone AmdimNet --max_epoch 80 --temperature 128 --step_size 20 --lr 0.0001 --init_weights pretrained/Img900-Mini4.pth --model_name Img900-Mini-CD --tag 31
+python trainval.py --way 5 --shot 5 --gpu $1 --dataset Cross --cross_ds CUB --backbone AmdimNet --max_epoch 100 --temperature 128 --step_size 20 --lr 0.0001 --init_weights pretrained/Img900-Mini4.pth --model_name Img900-Mini-CUB --tag 32
+python trainval.py --way 5 --shot 5 --gpu $1 --dataset Cross --cross_ds CropDisease,Eurosat,ISIC,KidneyStones --backbone AmdimNet --max_epoch 100 --temperature 128 --step_size 20 --lr 0.0001 --init_weights pretrained/Img900-Mini-CUB.pth --model_name Img900-Mini-CUB-All --tag 33
