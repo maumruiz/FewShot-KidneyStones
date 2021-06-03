@@ -1,0 +1,8 @@
+python test.py --way 5 --shot 5 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 17 --model_path pretrained/Img900-Mini80-All.pth
+python test.py --way 5 --shot 20 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 17 --model_path pretrained/Img900-Mini80-All.pth
+python test.py --way 5 --shot 5 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 18 --model_path pretrained/Img900-Mini80-CUB-All.pth
+python test.py --way 5 --shot 20 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 18 --model_path pretrained/Img900-Mini80-CUB-All.pth
+python test.py --way 5 --shot 5 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 19 --model_path pretrained/Img900-All_ExcCUB.pth
+python test.py --way 5 --shot 20 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 19 --model_path pretrained/Img900-All_ExcCUB.pth
+python test.py --way 5 --shot 5 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 20 --model_path pretrained/Img900-All.pth
+python test.py --way 5 --shot 20 --backbone AmdimNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 1000 --gpu $1 --tag 20 --model_path pretrained/Img900-All.pth

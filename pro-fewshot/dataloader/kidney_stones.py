@@ -17,6 +17,10 @@ class KidneyStones(Dataset):
         csv_path = osp.join(SPLIT_PATH, setname + '.csv')
         lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
 
+        if args.cross_ds and args.cross_ds == 'VincentEstrade':
+            csv_path = osp.join(SPLIT_PATH, 'test-ve.csv')
+            lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
+
         data = []
         label = []
         lb = -1
