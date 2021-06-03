@@ -56,7 +56,8 @@ def main(args):
     model = model.cuda()
     model.eval()
 
-    print('###### Training ######')
+    model_name = args.model_path.split('/')[1].split('.')[0]
+    print(f"###### Testing: Model {model_name} | Shot: {args.shot} ######")
     test_acc_record = np.zeros((args.test_epi,))
     ave_acc = Averager()
     label = torch.arange(0, args.way, 1 / args.query).long().cuda()
