@@ -1,4 +1,4 @@
-python test.py --way 5 --shot 5 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s.pth
-python test.py --way 5 --shot 5 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s20t.pth
-python test.py --way 5 --shot 20 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s.pth
-python test.py --way 5 --shot 20 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s20t.pth
+python test.py --way 4 --shot 5 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s.pth
+python test.py --way 4 --shot 5 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s20t.pth
+python test.py --way 4 --shot 20 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s.pth
+python test.py --way 4 --shot 20 --backbone ConvNet --dataset KidneyStones --cross_ds VincentEstrade --test_epi 200 --gpu $1 --model_path pretrained/ConvNet-5w5s20t.pth
