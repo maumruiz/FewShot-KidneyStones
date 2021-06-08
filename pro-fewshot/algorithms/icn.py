@@ -148,7 +148,58 @@ class ICN():
 
         return supp_fts, query_fts
 
-    def _score(self, X, y, k=3, p=2, q=2, r=2):
+    # def _score(self, X, y, k=3, p=2, q=2, r=2):
+    #     """Compute class prototypes from support samples.
+
+    #     # Arguments
+    #         X: torch.Tensor. Tensor of shape (n * k, d) where d is the embedding
+    #             dimension.
+    #         y: torch.Tensor. The class of every sample
+    #         k: int. the number of neigbhors (small k focus on local structures big k on global)
+    #         p: int. must be a natural number, the higher is p, the lower penalization on lambda function
+    #         q: int. must be a natural number, the higher is p, the lower penalization on omega function
+    #         r: int. must be a natural number, the higher is r, the lower penalization on gamma function
+
+    #     # Returns
+    #         class_prototypes: Prototypes aka mean embeddings for each class
+    #     """
+    #     a = X - X.min(axis=0)
+    #     b = X.max(axis=0) - X.min(axis=0)
+    #     X = np.divide(a , b, out=np.zeros_like(X), where=b!=0) #min max scale by feature
+    #     nbrs = NearestNeighbors(n_neighbors=k+1).fit(X)
+    #     distances, indices = nbrs.kneighbors(X)
+    #     distances = distances[:,1:]
+    #     indices = indices[:,1:]
+
+    #     classes = y[indices] # class by neighbord
+    #     yMatrix = np.transpose(np.array([list(y)]*k)) #class matrix
+    #     scMatrix = (yMatrix == classes)*1 #same class matrix [1 same class, 0 diff class]
+    #     dcMatrix = (scMatrix)*(-1)+1 #different class matrix [negation of scMatrix]
+
+    #     ### Normalizing distances between neighbords
+    #     dt = np.transpose(distances)
+    #     nd = (dt - dt.min(axis=0)) / ( (dt.max(axis=0) - dt.min(axis=0)) +0.001 )
+    #     nd = np.round(np.transpose(nd),2)
+
+    #     ## Distances
+    #     scd = distances*scMatrix #Same class distance
+    #     dcd = distances*dcMatrix #Different class distance
+    #     ## Normalized distances
+    #     scnd = nd*scMatrix #Same class normalized distance
+    #     dcnd = nd*dcMatrix #Different class normalized distance
+        
+    #     ### Lambda computation
+    #     plamb = (1 - scnd)*scMatrix
+    #     lamb = (dcnd + plamb)
+    #     lambs = np.sum(lamb,axis=1)
+    #     lambs2 = np.round(((lambs/max(lambs))**(1/p)),2)
+    #     lambr = round(sum(lambs2)/len(y),2)
+        
+    #     gamma = round(sum((np.sum(scMatrix,axis=1)/k)**(1/r))/len(y),2)
+        
+    #     return round((lambr + gamma)/2,2)
+
+    def _score(X, y, k=4, p=1, q=1, r=1):
         """Compute class prototypes from support samples.
 
         # Arguments
@@ -163,40 +214,61 @@ class ICN():
         # Returns
             class_prototypes: Prototypes aka mean embeddings for each class
         """
-        a = X - X.min(axis=0)
-        b = X.max(axis=0) - X.min(axis=0)
-        X = np.divide(a , b, out=np.zeros_like(X), where=b!=0) #min max scale by feature
-        nbrs = NearestNeighbors(n_neighbors=k+1).fit(X)
+        if k+2 > X.shape[0]:
+            k = X.shape[0] - 2
+            
+        nbrs = NearestNeighbors(n_neighbors=k+2).fit(X)
         distances, indices = nbrs.kneighbors(X)
         distances = distances[:,1:]
         indices = indices[:,1:]
 
-        classes = y[indices] # class by neighbord
-        yMatrix = np.transpose(np.array([list(y)]*k)) #class matrix
-        scMatrix = (yMatrix == classes)*1 #same class matrix [1 same class, 0 diff class]
-        dcMatrix = (scMatrix)*(-1)+1 #different class matrix [negation of scMatrix]
+        classes = y[indices] # Class by neighbor
+        yMatrix = np.transpose(np.array([list(y)]*(k+1))) # Class matrix
+        scMatrix = (yMatrix == classes)*1 # Same class matrix [1 same class, 0 diff class]
+        dcMatrix = (scMatrix)*(-1)+1 # Different class matrix [negation of scMatrix]
 
-        ### Normalizing distances between neighbords
+        ### Lambda Computation
+
+        # Same class distance
         dt = np.transpose(distances)
-        nd = (dt - dt.min(axis=0)) / ( (dt.max(axis=0) - dt.min(axis=0)) +0.001 )
-        nd = np.round(np.transpose(nd),2)
+        dcnd = distances*dcMatrix
+        nn_dc = np.ma.masked_equal(dcnd, 0.0, copy=False).min(axis=1).data
+        nd = (dt / (nn_dc + 0.00001 ) )
+        nd = nd / nd.max(axis=0)
+        nd = np.transpose(nd)
 
-        ## Distances
-        scd = distances*scMatrix #Same class distance
-        dcd = distances*dcMatrix #Different class distance
-        ## Normalized distances
-        scnd = nd*scMatrix #Same class normalized distance
-        dcnd = nd*dcMatrix #Different class normalized distance
+        nd = nd[:, :-1]
+        scMatrix = scMatrix[:, :-1]
+        scnd = nd*scMatrix
+
+        scndsum = np.sum(scnd, axis=1) / (scMatrix.sum(axis=1)+0.000001)
+        sclamb = 1 - (np.sum(scndsum) / (np.count_nonzero(scndsum)+0.000001))
+
+        dcnd = dcnd[:, :-1]
+        dcMatrix = dcMatrix[:, :-1]
+
+        # Different class distance
+        dcnd = dcnd / (dcnd.max() + 0.000001)
+        dcop = -1 if (dcMatrix == 0).all() else 0
+        dcndsum = np.sum(dcnd, axis=1) / (dcMatrix.sum(axis=1)+0.000001)
+        dclamb = np.sum(dcndsum) / (np.count_nonzero(dcndsum)+0.000001)
+        dclamb = np.abs(dclamb + dcop)
+
+        lambr = (sclamb + dclamb) / 2
+
+        ## Omega Calculation
+        varsc = np.var(scnd)
+        vardf = np.var(dcnd)
+        omega = np.round((1 - (varsc+vardf))**(1/q),2)
         
-        ### Lambda computation
-        plamb = (1 - scnd)*scMatrix
-        lamb = (dcnd + plamb)
-        lambs = np.sum(lamb,axis=1)
-        lambs2 = np.round(((lambs/max(lambs))**(1/p)),2)
-        lambr = round(sum(lambs2)/len(y),2)
+        ### Gamma computation
+        if (scMatrix == 0).all() or (scMatrix == 1).all():
+            gamma = 1.0
+        else:
+            gamma = sum((np.sum(scMatrix,axis=1)/k)**(1/r))/len(y)
+
+        # print(f"lambda: {lambr}, omega: {omega}, gamma: {gamma}")
         
-        gamma = round(sum((np.sum(scMatrix,axis=1)/k)**(1/r))/len(y),2)
-        
-        return round((lambr + gamma)/2,2)
+        return (lambr + gamma + omega)/3
 
 
