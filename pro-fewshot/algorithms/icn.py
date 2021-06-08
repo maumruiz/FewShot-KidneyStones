@@ -53,6 +53,13 @@ class ICN():
                 isomap_model = {'model': Isomap, 'args': {'n_components': n_components, 'n_neighbors': n_neighbors}, 'name':'isomap', 'n_components': n_components}
                 models.append(isomap_model)
 
+        if 'umap' in args.icn_models:
+            import umap
+            for n_components in components_list:
+                n_components = task_samples - 2 if n_components >= task_samples else n_components
+                umap_model = {'model': umap.UMAP, 'args': {'n_components': n_components}, 'name':'umap', 'n_components': n_components}
+                models.append(umap_model)
+
         if 'kernel_pca' in args.icn_models:
             from sklearn.decomposition import KernelPCA
             for n_components in components_list:
@@ -199,7 +206,7 @@ class ICN():
         
     #     return round((lambr + gamma)/2,2)
 
-    def _score(X, y, k=4, p=1, q=1, r=1):
+    def _score(self, X, y, k=4, p=1, q=1, r=1):
         """Compute class prototypes from support samples.
 
         # Arguments
