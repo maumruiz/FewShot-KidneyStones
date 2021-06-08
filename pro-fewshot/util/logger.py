@@ -30,7 +30,8 @@ class ExpLogger():
             'ctm_m_type', 'ctm_reduce_dims', 'ctm_split_blocks']
 
         if 'ICN' in self.args['modules']:
-            arg_keys += ['icn_models', 'icn_reduction_set', 'icn_reduction_type']
+            arg_keys += ['icn_models', 'icn_reduction_set', 'icn_reduction_type', 'icn_original_score', 
+            'icn_multiple_components', 'icn_n_dims']
 
         if 'dataset' == 'Cross':
             arg_keys += ['cross_ds']

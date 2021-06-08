@@ -57,6 +57,7 @@ def get_args():
     parser.add_argument('--icn_reduction_type', type=str, default='unsupervised', choices=['supervised', 'unsupervised'])
     parser.add_argument('--icn_multiple_components', action='store_true')
     parser.add_argument('--icn_n_dims', type=int, default=6)
+    parser.add_argument('--icn_original_score', action='store_true')
 
     return parser.parse_args()
 
@@ -86,6 +87,7 @@ def process_args(args):
         del args.icn_reduction_type
         del args.icn_multiple_components
         del args.icn_n_dims
+        del args.icn_original_score
     else:
         args.icn_models = args.icn_models.split(',') if args.icn_models else []
 
