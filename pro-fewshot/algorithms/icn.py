@@ -133,6 +133,8 @@ class ICN():
             score = self.score(embeddings, y)
 
             if self.args.save_icn_scores:
+                if f'{m["name"]}_{m["n_components"]}dims' not in self.args.icn_log:
+                    self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'] = []
                 self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'].append(score)
 
             if score > best['score']:

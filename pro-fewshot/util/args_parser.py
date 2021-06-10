@@ -115,23 +115,6 @@ def init_saving_features(args):
     args.fts_labels = []
 
 def init_saving_icn_scores(args):
-    if args.backbone == 'ConvNet':
-        hdim = 64
-    elif args.backbone == 'ResNet12':
-        hdim = 512
-    elif args.backbone == 'ResNet18':
-        hdim = 640
-    components_list = []
-    if args.icn_multiple_components:
-        for _ in range(args.icn_n_dims):
-            hdim = hdim // 2
-            components_list.append(hdim)
-    else:
-        components_list.append(args.icn_n_dims)
-
     args.icn_log = {}
     args.icn_log['original'] = []
-    for model in args.icn_models:
-        for n_components in components_list:
-            args.icn_log[f'{model}_{n_components}dims'] = []
     args.icn_log['best'] = []
