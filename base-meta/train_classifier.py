@@ -202,8 +202,7 @@ def main(config):
             epoch_str = str(epoch)
         else:
             epoch_str = 'ex'
-        log_str = 'epoch {}, train {:.4f}|{:.4f}'.format(
-                epoch_str, aves['tl'], aves['ta'])
+        log_str = 'epoch {}, train {:.4f}|{:.4f}'.format(epoch_str, aves['tl'], aves['ta'])
         writer.add_scalars('loss', {'train': aves['tl']}, epoch)
         writer.add_scalars('acc', {'train': aves['ta']}, epoch)
 
@@ -223,6 +222,9 @@ def main(config):
             log_str += ', {} {}/{}'.format(t_epoch, t_used, t_estimate)
         else:
             log_str += ', {}'.format(t_epoch)
+
+        if aves['va'] > max_va:
+            log_str += '  ------ New Best Epoch ------'
         utils.log(log_str)
 
         if config.get('_parallel'):
