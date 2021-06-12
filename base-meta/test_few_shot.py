@@ -13,6 +13,7 @@ from sklearn.metrics import roc_auc_score
 import datasets
 import models
 import utils
+import utils.settings as settings
 import utils.few_shot as fs
 from datasets.samplers import CategoriesSampler
 
@@ -26,6 +27,11 @@ def mean_confidence_interval(data, confidence=0.95):
 
 
 def main(config):
+
+    # ICN
+    if config.get('icn'):
+        settings.icn = config['icn']
+
     # dataset
     dataset = datasets.make(config['dataset'], **config['dataset_args'])
     utils.log('dataset: {} (x{}), {}'.format(
@@ -37,6 +43,11 @@ def main(config):
     n_shot, n_query = args.shot, 15
     n_batch = 200
     ep_per_batch = 4
+
+    settings.way = n_way
+    settings.shot = n_shot
+    settings.query = n_query
+
     batch_sampler = CategoriesSampler(
             dataset.label, n_batch, n_way, n_shot + n_query,
             ep_per_batch=ep_per_batch)

@@ -4,4 +4,5 @@ from . import resnet12
 from . import resnet
 from . import classifier
 from . import meta_baseline
+from . import icn
 

@@ -1,6 +1,14 @@
 dataset: mini-imagenet
 dataset_args: {split: test}
 
+icn:
+  save_icn_scores: False
+  icn_models: 'umap,pca,isomap'
+  icn_reduction_set: 'all'
+  icn_reduction_type: 'unsupervised'
+  icn_multiple_components: False
+  icn_n_dims: 6
+  icn_original_score: False
 
 load: ./save/meta_mini-imagenet-1shot_meta-baseline-resnet12/max-va.pth
 

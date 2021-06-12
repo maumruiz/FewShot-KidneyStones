@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import models
 import utils
 from .models import register
-
+import utils.settings as settings
 
 @register('meta-baseline')
 class MetaBaseline(nn.Module):
@@ -20,6 +20,10 @@ class MetaBaseline(nn.Module):
             self.temp = nn.Parameter(torch.tensor(temp))
         else:
             self.temp = temp
+        
+        if settings.icn:
+            from models.icn import ICN
+            self.icn = ICN()
 
     def forward(self, x_shot, x_query):
         shot_shape = x_shot.shape[:-3]
@@ -32,6 +36,9 @@ class MetaBaseline(nn.Module):
         x_shot, x_query = x_tot[:len(x_shot)], x_tot[-len(x_query):]
         x_shot = x_shot.view(*shot_shape, -1)
         x_query = x_query.view(*query_shape, -1)
+
+        if settings.icn:
+            x_shot, x_query = self.icn.transform(x_shot, x_query)
 
         if self.method == 'cos':
             x_shot = x_shot.mean(dim=-2)
