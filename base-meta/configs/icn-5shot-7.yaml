@@ -10,7 +10,5 @@ icn:
   icn_n_dims: 6
   icn_original_score: False
 
-load: ./save/meta_mini-imagenet-1shot_meta-baseline-resnet12/max-va.pth
-name: test-1shot-exp7
-
-# Replace load with load_encoder for loading the encoder only (e.g. for testing Classifier-Baseline)
+load: ./save/meta_mini-imagenet-5shot_meta-baseline-resnet12/max-va.pth
+name: test-5shot-exp7

@@ -1,5 +1,6 @@
 import argparse
 import yaml
+import os
 
 import torch
 import torch.nn as nn
@@ -27,6 +28,14 @@ def mean_confidence_interval(data, confidence=0.95):
 
 
 def main(config):
+    svname = config['name']
+    if svname is None:
+        svname = 'meta_{}-{}shot'.format(
+                config['train_dataset'], config['n_shot'])
+        svname += '_' + config['model'] + '-' + config['model_args']['encoder']
+    save_path = os.path.join('./save', svname)
+    utils.ensure_path(save_path, remove=False)
+    utils.set_log_path(save_path)
 
     # ICN
     if config.get('icn'):
@@ -41,7 +50,7 @@ def main(config):
     else:
         n_way = 2
     n_shot, n_query = args.shot, 15
-    n_batch = 200
+    n_batch = 100
     ep_per_batch = 4
 
     settings.way = n_way
@@ -94,6 +103,7 @@ def main(config):
                     aves['vl'].add(loss.item(), len(data))
                     aves['va'].add(acc, len(data))
                     va_lst.append(acc)
+                    settings.accuracies.append(acc)
                 else:
                     x_shot = x_shot[:, 0, :, :, :, :].contiguous()
                     shot_shape = x_shot.shape[:-3]
@@ -113,10 +123,12 @@ def main(config):
                         aves['va'].add(acc, len(data))
                         va_lst.append(acc)
 
-        print('test epoch {}: acc={:.2f} +- {:.2f} (%), loss={:.4f} (@{})'.format(
+        utils.log('test epoch {}: acc={:.2f} +- {:.2f} (%), loss={:.4f} (@{})'.format(
                 epoch, aves['va'].item() * 100,
                 mean_confidence_interval(va_lst) * 100,
                 aves['vl'].item(), _[-1]))
+
+    settings.save_accs(save_path)
 
 
 if __name__ == '__main__':

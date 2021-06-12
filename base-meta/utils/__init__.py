@@ -24,7 +24,6 @@ def log(obj, filename='log.txt'):
         with open(os.path.join(_log_path, filename), 'a') as f:
             print(obj, file=f)
 
-
 class Averager():
 
     def __init__(self):

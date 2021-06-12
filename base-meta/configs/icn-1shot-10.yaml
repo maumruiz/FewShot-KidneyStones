@@ -4,13 +4,11 @@ dataset_args: {split: test}
 icn:
   save_icn_scores: False
   icn_models: 'umap,pca,isomap'
-  icn_reduction_set: 'all'
-  icn_reduction_type: 'unsupervised'
+  icn_reduction_set: 'support'
+  icn_reduction_type: 'supervised'
   icn_multiple_components: False
   icn_n_dims: 6
-  icn_original_score: False
+  icn_original_score: True
 
 load: ./save/meta_mini-imagenet-1shot_meta-baseline-resnet12/max-va.pth
-name: test-1shot-exp7
-
-# Replace load with load_encoder for loading the encoder only (e.g. for testing Classifier-Baseline)
+name: test-1shot-exp10

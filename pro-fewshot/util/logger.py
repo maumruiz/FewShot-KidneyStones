@@ -66,13 +66,13 @@ class ExpLogger():
         trainval_df['train_acc'] = self.train_acc
         trainval_df['val_loss'] = self.val_loss
         trainval_df['val_acc'] = self.val_acc
-        trainval_df.to_csv(osp.join(path, 'trainval.csv'))
+        trainval_df.to_csv(osp.join(path, 'trainval.csv'), index=False)
 
     def save_test(self, path):
         test_df = pd.DataFrame()
         test_df['batch'] = [e+1 for e in range(len(self.test_acc))]
         test_df['acc'] = self.test_acc
-        test_df.to_csv(osp.join(path, 'test.csv'))
+        test_df.to_csv(osp.join(path, 'test.csv'), index=False)
 
     def save_results(self, path):       
         results_df = pd.DataFrame()
