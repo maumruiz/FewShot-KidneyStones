@@ -80,20 +80,6 @@ class ICN():
                 n_components = task_samples - 2 if n_components >= task_samples else n_components
                 featureagg_model = {'model': FeatureAgglomeration, 'args': {'n_clusters': n_components }, 'name':'feature_agg', 'n_components': n_components}
                 models.append(featureagg_model)
-
-        if 'fast_ica' in self.args['icn_models']:
-            from sklearn.decomposition import FastICA
-            for n_components in components_list:
-                n_components = task_samples - 2 if n_components >= task_samples else n_components
-                fast_ica_model = {'model': FastICA, 'args': {'n_components': n_components }, 'name':'fast_ica', 'n_components': n_components}
-                models.append(fast_ica_model)
-
-        if 'nmf' in self.args['icn_models']:
-            from sklearn.decomposition import NMF
-            for n_components in components_list:
-                n_components = task_samples - 2 if n_components >= task_samples else n_components
-                nmf_model = {'model': NMF, 'args': {'n_components': n_components, 'init': 'nndsvda' }, 'name':'nmf', 'n_components': n_components}
-                models.append(nmf_model)
             
         return models
 

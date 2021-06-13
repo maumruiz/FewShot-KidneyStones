@@ -3,7 +3,7 @@ dataset_args: {split: test}
 
 icn:
   save_icn_scores: False
-  icn_models: 'umap,pca,isomap,kernel_pca,truncated_svd,feature_agg,nmf'
+  icn_models: 'pca,isomap,kernel_pca,truncated_svd,feature_agg'
   icn_reduction_set: 'all'
   icn_reduction_type: 'unsupervised'
   icn_multiple_components: True
