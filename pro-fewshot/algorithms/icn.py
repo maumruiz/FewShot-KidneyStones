@@ -81,20 +81,6 @@ class ICN():
                 n_components = task_samples - 2 if n_components >= task_samples else n_components
                 featureagg_model = {'model': FeatureAgglomeration, 'args': {'n_clusters': n_components }, 'name':'feature_agg', 'n_components': n_components}
                 models.append(featureagg_model)
-
-        if 'fast_ica' in args.icn_models:
-            from sklearn.decomposition import FastICA
-            for n_components in components_list:
-                n_components = task_samples - 2 if n_components >= task_samples else n_components
-                fast_ica_model = {'model': FastICA, 'args': {'n_components': n_components }, 'name':'fast_ica', 'n_components': n_components}
-                models.append(fast_ica_model)
-
-        if 'nmf' in args.icn_models:
-            from sklearn.decomposition import NMF
-            for n_components in components_list:
-                n_components = task_samples - 2 if n_components >= task_samples else n_components
-                nmf_model = {'model': NMF, 'args': {'n_components': n_components, 'init': 'nndsvda' }, 'name':'nmf', 'n_components': n_components}
-                models.append(nmf_model)
             
         return models
 
@@ -158,7 +144,7 @@ class ICN():
 
         return supp_fts, query_fts
 
-    def _original_score(self, X, y, k=3, p=2, q=2, r=2):
+    def _original_score(self, X, y, k=5, p=2, q=2, r=2):
         """Compute class prototypes from support samples.
 
         # Arguments
@@ -173,6 +159,14 @@ class ICN():
         # Returns
             class_prototypes: Prototypes aka mean embeddings for each class
         """
+        use_gamma = True
+        use_omega = False
+        n_funcs = 2
+        if k >= X.shape[0]:
+            k = 3
+            use_gamma = False
+            n_funcs -= 1
+
         a = X - X.min(axis=0)
         b = X.max(axis=0) - X.min(axis=0)
         X = np.divide(a , b, out=np.zeros_like(X), where=b!=0) #min max scale by feature
@@ -204,10 +198,27 @@ class ICN():
         lambs = np.sum(lamb,axis=1)
         lambs2 = np.round(((lambs/max(lambs))**(1/p)),2)
         lambr = round(sum(lambs2)/len(y),2)
+
+        ### Omega Calculation
+        varsc = np.var(scnd)
+        vardf = np.var(dcnd)
+        omega = np.round((1 - (varsc+vardf))**(1/q),2)
         
-        gamma = round(sum((np.sum(scMatrix,axis=1)/k)**(1/r))/len(y),2)
+        # print(scMatrix)
+        # print(np.sum(scMatrix,axis=1)/(k-1))
+        gamma = round(sum((np.sum(scMatrix,axis=1)/(k-1))**(1/r))/len(y),2)
+
+        print(f"lambda: {lambr}, omega: {omega}, gamma: {gamma}")
+
+        icn = lambr
+
+        if use_omega:
+           icn += omega 
+
+        if use_gamma:
+           icn += gamma 
         
-        return round((lambr + gamma)/2,2)
+        return icn/n_funcs
 
     def _score(self, X, y, k=4, p=1, q=1, r=1):
         """Compute class prototypes from support samples.

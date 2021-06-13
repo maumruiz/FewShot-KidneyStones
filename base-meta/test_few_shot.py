@@ -50,8 +50,8 @@ def main(config):
     else:
         n_way = 2
     n_shot, n_query = args.shot, 15
-    n_batch = 100
-    ep_per_batch = 4
+    n_batch = 500
+    ep_per_batch = 1
 
     settings.way = n_way
     settings.shot = n_shot
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./configs/test_few_shot.yaml')
     parser.add_argument('--shot', type=int, default=1)
-    parser.add_argument('--test-epochs', type=int, default=10)
+    parser.add_argument('--test-epochs', type=int, default=2)
     parser.add_argument('--sauc', action='store_true')
     parser.add_argument('--gpu', default='0')
     args = parser.parse_args()
