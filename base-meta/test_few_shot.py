@@ -28,6 +28,7 @@ def mean_confidence_interval(data, confidence=0.95):
 
 
 def main(config):
+    print('Testing ', config['name'])
     svname = config['name']
     if svname is None:
         svname = 'meta_{}-{}shot'.format(
@@ -50,7 +51,7 @@ def main(config):
     else:
         n_way = 2
     n_shot, n_query = args.shot, 15
-    n_batch = 500
+    n_batch = 1000
     ep_per_batch = 1
 
     settings.way = n_way
@@ -135,7 +136,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='./configs/test_few_shot.yaml')
     parser.add_argument('--shot', type=int, default=1)
-    parser.add_argument('--test-epochs', type=int, default=2)
+    parser.add_argument('--test-epochs', type=int, default=1)
     parser.add_argument('--sauc', action='store_true')
     parser.add_argument('--gpu', default='0')
     args = parser.parse_args()
