@@ -157,7 +157,7 @@ class ICN():
 
         return supp_fts, query_fts
 
-    def _original_score(self, X, y, k=5, p=2, q=2, r=2):
+    def _original_score(self, X, y, k=3, p=2, q=2, r=2):
         """Compute class prototypes from support samples.
 
         # Arguments
