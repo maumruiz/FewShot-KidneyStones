@@ -208,7 +208,7 @@ class ICN():
         # print(np.sum(scMatrix,axis=1)/(k-1))
         gamma = round(sum((np.sum(scMatrix,axis=1)/(k-1))**(1/r))/len(y),2)
 
-        print(f"lambda: {lambr}, omega: {omega}, gamma: {gamma}")
+        # print(f"lambda: {lambr}, omega: {omega}, gamma: {gamma}")
 
         icn = lambr
 
