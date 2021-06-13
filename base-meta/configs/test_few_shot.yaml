@@ -1,7 +1,7 @@
 dataset: mini-imagenet
 dataset_args: {split: test}
 
-load: ./save/meta_mini-imagenet-1shot_meta-baseline-resnet12/max-va.pth
-name: 1shot-resnet
+load: ./save/meta_mini-imagenet-5shot_meta-baseline-resnet12/max-va.pth
+name: 5shot-resnet
 
 # Replace load with load_encoder for loading the encoder only (e.g. for testing Classifier-Baseline)
