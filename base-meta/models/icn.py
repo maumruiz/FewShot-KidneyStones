@@ -172,6 +172,10 @@ class ICN():
         # Returns
             class_prototypes: Prototypes aka mean embeddings for each class
         """
+
+        if k >= X.shape[0]:
+            k = 3
+
         a = X - X.min(axis=0)
         b = X.max(axis=0) - X.min(axis=0)
         X = np.divide(a , b, out=np.zeros_like(X), where=b!=0) #min max scale by feature
