@@ -68,6 +68,12 @@ def main(args):
             pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
             print('Pretrained dict keys:')
             print(pretrained_dict.keys())
+        elif 'model_sd' in model_detail:
+            pretrained_dict = model_detail['model_sd']
+            # remove weights for FC
+            pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+            print('Pretrained dict keys:')
+            print(pretrained_dict.keys())
         else:
             pretrained_dict = model_detail['model']
             pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}

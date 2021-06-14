@@ -159,13 +159,9 @@ class ICN():
         # Returns
             class_prototypes: Prototypes aka mean embeddings for each class
         """
-        use_gamma = True
-        use_omega = False
-        n_funcs = 2
+
         if k >= X.shape[0]:
             k = 3
-            use_gamma = False
-            n_funcs -= 1
 
         a = X - X.min(axis=0)
         b = X.max(axis=0) - X.min(axis=0)
@@ -198,27 +194,10 @@ class ICN():
         lambs = np.sum(lamb,axis=1)
         lambs2 = np.round(((lambs/max(lambs))**(1/p)),2)
         lambr = round(sum(lambs2)/len(y),2)
-
-        ### Omega Calculation
-        varsc = np.var(scnd)
-        vardf = np.var(dcnd)
-        omega = np.round((1 - (varsc+vardf))**(1/q),2)
         
-        # print(scMatrix)
-        # print(np.sum(scMatrix,axis=1)/(k-1))
-        gamma = round(sum((np.sum(scMatrix,axis=1)/(k-1))**(1/r))/len(y),2)
-
-        # print(f"lambda: {lambr}, omega: {omega}, gamma: {gamma}")
-
-        icn = lambr
-
-        if use_omega:
-           icn += omega 
-
-        if use_gamma:
-           icn += gamma 
+        gamma = round(sum((np.sum(scMatrix,axis=1)/k)**(1/r))/len(y),2)
         
-        return icn/n_funcs
+        return round((lambr + gamma)/2,2)
 
     def _score(self, X, y, k=4, p=1, q=1, r=1):
         """Compute class prototypes from support samples.
