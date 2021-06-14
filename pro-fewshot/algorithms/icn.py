@@ -110,25 +110,29 @@ class ICN():
 
         # Evaluate feature reductor models
         for m in self.models:
-            if self.args.icn_reduction_type == 'unsupervised':
-                reducer = m['model'](**m['args']).fit(X)
-            elif self.args.icn_reduction_type == 'supervised':
-                reducer = m['model'](**m['args']).fit(X, y=y)
+            try:
+                if self.args.icn_reduction_type == 'unsupervised':
+                    reducer = m['model'](**m['args']).fit(X)
+                elif self.args.icn_reduction_type == 'supervised':
+                    reducer = m['model'](**m['args']).fit(X, y=y)
 
-            embeddings = reducer.transform(support)
-            score = self.score(embeddings, y)
+                embeddings = reducer.transform(support)
+                score = self.score(embeddings, y)
 
-            if self.args.save_icn_scores:
-                if f'{m["name"]}_{m["n_components"]}dims' not in self.args.icn_log:
-                    self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'] = []
-                self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'].append(score)
+                if self.args.save_icn_scores:
+                    if f'{m["name"]}_{m["n_components"]}dims' not in self.args.icn_log:
+                        self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'] = []
+                    self.args.icn_log[f'{m["name"]}_{m["n_components"]}dims'].append(score)
 
-            if score > best['score']:
-                best['score'] = score
-                best['embeddings'] = embeddings
-                best['reducer'] = reducer
-                best['n_components'] = m['n_components']
-                best['name'] = m['name']
+                if score > best['score']:
+                    best['score'] = score
+                    best['embeddings'] = embeddings
+                    best['reducer'] = reducer
+                    best['n_components'] = m['n_components']
+                    best['name'] = m['name']
+            except:
+                continue    
+            
 
         # Select best model
         if best['reducer']:

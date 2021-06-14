@@ -66,7 +66,7 @@ def main(args):
         init_saving_features(args)
         
     if 'ICN' in args.modules:
-        args.save_icn_scores = True
+        args.save_icn_scores = False
         init_saving_icn_scores(args)
         
     with torch.no_grad():
