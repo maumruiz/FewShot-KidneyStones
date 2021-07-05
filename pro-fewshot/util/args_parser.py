@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument('--train_epi', type=int, default=100)
     parser.add_argument('--val_epi', type=int, default=500)
     parser.add_argument('--test_epi', type=int, default=1000)
-    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--step_size', type=int, default=20)
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
@@ -96,6 +96,17 @@ def process_args(args):
         del args.rkhs
         del args.nd
 
+    if args.optimizer == 'recommended':
+        if args.backbone == 'ConvNet':
+            optimizer = 'Adam'
+        elif 'ResNet' in args.backbone:
+            optimizer = 'SGD'
+        elif args.backbone == 'AmdimNet':
+            optimizer = 'SGD'
+        else:
+            raise ValueError('No Such Encoder')
+        args.optimizer = optimizer
+
     gmt = time.localtime() 
     # timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
     timestmp = f'{gmt.tm_mon:02d}{gmt.tm_mday:02d}-{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
@@ -106,8 +117,18 @@ def process_args(args):
     ensure_path(args.save_path)
 
 def print_args(args):
+    args_str = ''
+    i = 0
     for key, value in args.__dict__.items():
-        print(f'{key}: {value}')
+        if key == 'save_path':
+            continue
+        if i % 6 == 0 and i > 0:
+            args_str += '\n'
+        args_str += f'{key + ": " + str(value):21.21} || '
+        i += 1
+    print(args_str[:-3])
+    if 'save_path' in args.__dict__.keys():
+        print(f'save_path: {args.save_path}')
 
 def init_saving_features(args):
     args.features = []

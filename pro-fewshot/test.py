@@ -20,7 +20,7 @@ def main(args):
 
     explog = ExpLogger(args)
 
-    print('###### Load data ######')
+    print('-- Loading data --')
     if args.dataset == 'MiniImageNet':
         from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
@@ -36,7 +36,7 @@ def main(args):
     sampler = FewShotSampler(test_set.label, args.test_epi, args.way, args.shot, args.query)
     loader = DataLoader(test_set, batch_sampler=sampler, num_workers=8, pin_memory=True)
 
-    print('###### Create model ######')
+    print('-- Creating model --')
     if args.model == 'ProtoNet':
         from models.protonet import ProtoNet as Model
     else:
@@ -57,7 +57,7 @@ def main(args):
     model.eval()
 
     model_name = args.model_path.split('/')[1].split('.')[0]
-    print(f"###### Testing: Model {model_name} | Shot: {args.shot} ######")
+    print(f"###### Testing: Model {model_name} | Shot: {args.shot} | Experiment {args.tag} ######")
     test_acc_record = np.zeros((args.test_epi,))
     ave_acc = Averager()
     label = torch.arange(0, args.way, 1 / args.query).long().cuda()
@@ -90,7 +90,7 @@ def main(args):
     print('Test Acc {:.4f} + {:.4f}'.format(m, pm))
     explog.mean_acc = m
 
-    print('###### Saving logs ######')
+    print('-- Saving logs --')
     explog.save_json(args.save_path)
     explog.save_test(args.save_path)
     explog.save_results(args.save_path)

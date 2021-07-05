@@ -29,7 +29,7 @@ def main(args):
     explog = ExpLogger(args)
     writer = SummaryWriter(log_dir=args.save_path)
 
-    print('###### Load data ######')
+    print('-- Loading data --')
     if args.dataset == 'MiniImageNet':
         from dataloader.mini_imagenet import MiniImageNet as Dataset
     elif args.dataset == 'CUB':
@@ -50,7 +50,7 @@ def main(args):
     val_loader = DataLoader(dataset=valset, batch_sampler=val_sampler, num_workers=4, pin_memory=True)
     
 
-    print('###### Create model ######')
+    print('-- Creating model --')
     if args.model == 'ProtoNet':
         from models.protonet import ProtoNet as Model
     else:
@@ -83,28 +83,18 @@ def main(args):
 
     explog.parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    print('###### Set optimizer ######')
-    if args.optimizer == 'recommended':
-        if args.backbone == 'ConvNet':
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-        elif 'ResNet' in args.backbone:
-            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-        elif args.backbone == 'AmdimNet':
-            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-        else:
-            raise ValueError('No Such Encoder')
+    print('-- Setting optimizer --')
+    if args.optimizer == 'Adam':
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    elif args.optimizer == 'SGD':
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     else:
-        if args.optimizer == 'Adam':
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-        elif args.optimizer == 'SGD':
-            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
-        else:
-            raise ValueError('No Such Optimizer')
+        raise ValueError('No Such Optimizer')
 
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.step_size, gamma=args.gamma)  
     
 
-    print('###### Training ######')
+    print(f'###### Training experiment {args.tag} ######')
     real_way = args.way
 
     train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 
@@ -236,7 +226,7 @@ def main(args):
     explog.elapsed_time = elapsed_time
 
 
-    print('###### Saving logs ######')
+    print('-- Saving logs --')
     explog.save(args.save_path)
     explog.save_json(args.save_path)
     explog.save_trainval(args.save_path)
@@ -249,7 +239,7 @@ def main(args):
     if 'ICN' in args.modules and args.save_icn_scores:
         explog.save_icnn_scores(args.save_path)
     
-    print(f"Elapsed time: {elapsed_time}")
+    print(f"### Elapsed time: {elapsed_time}")
 
 if __name__ == '__main__':
     print('###### Start experiment with args: ######')
