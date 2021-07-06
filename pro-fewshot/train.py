@@ -16,7 +16,6 @@ from util.args_parser import get_args, process_args, print_args, init_saving_fea
 from util.logger import ExpLogger
 
 
-
 def main(args):
 
     set_seed(args.seed)

@@ -10,8 +10,8 @@ import numpy as np
 # use for miniImageNet pre-train
 THIS_PATH = osp.dirname(__file__)
 ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
-IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/miniimagenet/images'))
-SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/miniimagenet/split'))
+IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/miniimagenet/images'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/miniimagenet/split'))
 
 class MiniImageNet(Dataset):
 
