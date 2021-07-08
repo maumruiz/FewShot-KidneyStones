@@ -83,9 +83,10 @@ def main(args):
                 args.fts_ids.append(batch[2][:args.way*args.shot])
 
             if args.save_logits:
+                labels = batch[1][:args.way*args.shot].unique_consecutive()
                 pred = torch.argmax(logits, dim=1)
-                explog.query_predictions += pred.tolist()
-                explog.query_labels += label.tolist()
+                explog.query_predictions += [labels[x].item() for x in pred]
+                explog.query_labels += batch[1][args.way*args.shot:].tolist()
 
             explog.test_acc.append(acc)
 
