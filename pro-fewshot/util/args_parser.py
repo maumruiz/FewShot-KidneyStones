@@ -33,6 +33,7 @@ def get_args():
 
     parser.add_argument('--save_path', type=str, default='runs')
     parser.add_argument('--save_features', action='store_true')
+    parser.add_argument('--save_logits', action='store_true')
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--seed', type=int, default=1234)
     parser.add_argument('--tag', type=int, default=99)

@@ -82,6 +82,11 @@ def main(args):
                 args.fts_labels.append(batch[1][:args.way*args.shot])
                 args.fts_ids.append(batch[2][:args.way*args.shot])
 
+            if args.save_logits:
+                pred = torch.argmax(logits, dim=1)
+                explog.query_predictions += pred.tolist()
+                explog.query_labels += label.tolist()
+
             explog.test_acc.append(acc)
 
             test_batches.set_description(f'Testing | Avg acc={ave_acc.item() * 100:.2f} |')
@@ -97,6 +102,9 @@ def main(args):
 
     if args.save_features:
         explog.save_features(args.save_path)
+
+    if args.save_logits:
+        explog.save_logits(args.save_path)
 
     if 'ICN' in args.modules and args.save_icn_scores:
         explog.save_icnn_scores(args.save_path)

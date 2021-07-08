@@ -17,6 +17,8 @@ class ExpLogger():
         self.mean_acc = 0.0
         self.parameters = 0
         self.elapsed_time = ''
+        self.query_predictions = []
+        self.query_labels = []
     
     def _to_obj(self):
         log = {}
@@ -117,6 +119,12 @@ class ExpLogger():
         cols = [cols[-1], cols[-2]] + cols[:-2]
         fts_df = fts_df[cols]
         fts_df.to_csv(osp.join(path, 'features.csv'), index=False)
+
+    def save_logits(self, path):
+        logits_df = pd.DataFrame()
+        logits_df['label'] = self.query_labels
+        logits_df['prediction'] = self.query_predictions
+        logits_df.to_csv(osp.join(path, 'logits.csv'), index=False)
 
     def save_icnn_scores(self, path):
         icn_df = pd.DataFrame(self.args['icn_log'])
