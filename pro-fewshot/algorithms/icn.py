@@ -298,7 +298,7 @@ def score(X, y, k=5, p=2, q=2, r=2):
     #min max scale by feature
     a = X - X.min(axis=0).values
     b = X.max(axis=0).values - X.min(axis=0).values
-    X = torch.divide(a , b)
+    X = torch.divide(a , b+eps)
 
     distances, indices = nearest_neighbors(X, k=k+1)
     distances = distances[:,1:]

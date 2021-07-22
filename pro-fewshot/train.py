@@ -123,7 +123,7 @@ def main(args):
             acc = count_acc(logits, train_label)
 
             if 'ICN_Loss' in args.modules:
-                supp_labels = torch.arange(0, 5, 1/5).type(torch.int).cuda()
+                supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
                 icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
                 loss += icn_loss_supp
 
@@ -155,7 +155,7 @@ def main(args):
                 acc = count_acc(logits, label)
 
                 if 'ICN_Loss' in args.modules:
-                    supp_labels = torch.arange(0, 5, 1/5).type(torch.int).cuda()
+                    supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
                     icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
                     loss += icn_loss_supp
 
@@ -166,7 +166,7 @@ def main(args):
         val_loss = val_loss.item()
         val_acc = val_acc.item()
         writer.add_scalar('data/val_loss', float(val_loss), epoch)
-        writer.add_scalar('data/val_acc', float(val_acc), epoch)        
+        writer.add_scalar('data/val_acc', float(val_acc), epoch)
 
         log_str = f'Epoch {epoch:2d} | TRAIN (Loss: {train_loss.item():.4f}, Acc: {train_acc.item()*100:.2f}) | VAL (Loss: {val_loss:.4f}, Acc: {val_acc*100:.4f})'
 

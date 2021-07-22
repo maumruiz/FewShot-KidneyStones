@@ -1,7 +1,6 @@
 import torch
 
 def distance_matrix(x, y=None, p = 2):
-    
     y = x if type(y) == type(None) else y
 
     n = x.size(0)
