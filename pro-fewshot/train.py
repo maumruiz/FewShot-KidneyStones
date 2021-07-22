@@ -10,10 +10,12 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import FewShotSampler
+from algorithms.icn import score
 from util.utils import set_gpu, Averager, Timer, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
 from util.logger import ExpLogger
+import util.globals as globals
 
 
 def main(args):
@@ -27,6 +29,8 @@ def main(args):
 
     explog = ExpLogger(args)
     writer = SummaryWriter(log_dir=args.save_path)
+
+    globals.init()
 
     print('-- Loading data --')
     if args.dataset == 'MiniImageNet':
@@ -117,6 +121,11 @@ def main(args):
             loss = F.cross_entropy(logits, train_label)
             acc = count_acc(logits, train_label)
 
+            if 'ICN_Loss' in args.modules:
+                supp_labels = torch.arange(0, 5, 1/5).type(torch.int).cuda()
+                icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
+                loss += icn_loss_supp
+
             writer.add_scalar('data/loss', float(loss), epoch)
             writer.add_scalar('data/acc', float(acc), epoch)
             train_batches.set_description(f'TRAIN | Epoch {epoch} | Loss={loss.item():.4f} | Acc={acc*100:.2f} |')
@@ -142,7 +151,13 @@ def main(args):
                 
                 logits = model(data)
                 loss = F.cross_entropy(logits, label)
-                acc = count_acc(logits, label)    
+                acc = count_acc(logits, label)
+
+                if 'ICN_Loss' in args.modules:
+                    supp_labels = torch.arange(0, 5, 1/5).type(torch.int).cuda()
+                    icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
+                    loss += icn_loss_supp
+
                 val_loss.add(loss.item())
                 val_acc.add(acc)
                 val_batches.set_description(f'VAL   | Epoch {epoch} | Loss={val_loss.item():.4f} | Acc={val_acc.item()*100:.2f} |')

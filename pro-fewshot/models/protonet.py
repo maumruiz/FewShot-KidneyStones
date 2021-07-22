@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from util.metric import euclidean_dist
+import util.globals as globals
 
 class ProtoNet(nn.Module):
 
@@ -56,6 +57,10 @@ class ProtoNet(nn.Module):
 
         if 'ICN' in self.args.modules:
             supp_fts, query_fts = self.icn.transform(supp_fts, query_fts)
+
+        if 'ICN_Loss' in self.args.modules:
+            globals.supp_fts = supp_fts
+            globals.query_fts = query_fts
 
         # Save the features to later visualization
         if self.args.save_features:
