@@ -16,6 +16,7 @@ def distance_matrix(x, y=None, p = 2):
     return dist
 
 def nearest_neighbors(X, k=3, p=2):
-    dist = distance_matrix(X, p=p) ** (1/2)
+    eps = 0.000001
+    dist = (distance_matrix(X, p=p) + eps) ** (1/2)
     knn = dist.topk(k, largest=False)
     return knn.values, knn.indices

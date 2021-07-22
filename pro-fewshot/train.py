@@ -98,6 +98,7 @@ def main(args):
     
 
     print(f'###### Training experiment {args.tag} ######')
+    # torch.autograd.set_detect_anomaly(True)
     real_way = args.way
 
     train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 

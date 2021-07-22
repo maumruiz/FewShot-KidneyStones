@@ -291,7 +291,7 @@ def score(X, y, k=5, p=2, q=2, r=2):
     # Returns
         
     """
-
+    eps = 0.000001
     if k >= X.shape[0]:
         k = 3
 
@@ -312,7 +312,7 @@ def score(X, y, k=5, p=2, q=2, r=2):
 
     ### Normalizing distances between neighbords
     dt = distances.T
-    nd = (dt - dt.min(axis=0).values) / ( (dt.max(axis=0).values - dt.min(axis=0).values) + 0.001 )
+    nd = (dt - dt.min(axis=0).values) / ( (dt.max(axis=0).values - dt.min(axis=0).values) + eps )
     nd = nd.T
 
     ## Distances
@@ -323,13 +323,13 @@ def score(X, y, k=5, p=2, q=2, r=2):
     dcnd = nd*dcMatrix #Different class normalized distance
     
     ### Lambda computation
-    plamb = (1 - scnd)*scMatrix
+    plamb = (1 - scnd) * scMatrix
     lamb = (dcnd + plamb)
     lambs = torch.sum(lamb,axis=1)
-    lambs2 = (lambs/torch.max(lambs))**(1/p)
-    lambr = torch.sum(lambs2)/y.shape[0]
+    lambs2 = (lambs / (torch.max(lambs) + eps)) ** (1/p)
+    lambr = torch.sum(lambs2) / (y.shape[0])
     
-    gamma = torch.sum((torch.sum(scMatrix,axis=1)/k)**(1/r))/y.shape[0]
+    gamma = torch.sum((torch.sum(scMatrix, axis=1) / k) ** (1/r)) / (y.shape[0])
     
     return (lambr + gamma)/2
 
