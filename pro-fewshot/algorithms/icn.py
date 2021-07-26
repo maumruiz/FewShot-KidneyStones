@@ -276,7 +276,68 @@ class ICN():
         
         return (lambr + gamma + omega)/3
 
-def score(X, y, k=5, p=2, q=2, r=2):
+# def score(X, y, k=5, p=2, q=2, r=2):
+#     """Compute class prototypes from support samples.
+
+#     # Arguments
+#         X: torch.Tensor. Tensor of shape (n * k, d) where d is the embedding
+#             dimension.
+#         y: torch.Tensor. The class of every sample
+#         k: int. the number of neigbhors (small k focus on local structures big k on global)
+#         p: int. must be a natural number, the higher is p, the lower penalization on lambda function
+#         q: int. must be a natural number, the higher is p, the lower penalization on omega function
+#         r: int. must be a natural number, the higher is r, the lower penalization on gamma function
+
+#     # Returns
+        
+#     """
+#     eps = 0.000001
+#     if k >= X.shape[0]:
+#         k = 3
+
+#     #min max scale by feature
+#     a = X - X.min(axis=0).values
+#     b = X.max(axis=0).values - X.min(axis=0).values
+#     X = torch.divide(a , b+eps)
+
+#     distances, indices = nearest_neighbors(X, k=k+1)
+#     distances = distances[:,1:]
+#     indices = indices[:,1:]
+
+#     # class by neighbor
+#     classes = y[indices]
+#     yMatrix = y.repeat(k,1).T
+#     scMatrix = (yMatrix == classes)*1 # Same class matrix [1 same class, 0 diff class]
+#     dcMatrix = (scMatrix)*(-1)+1 # Different class matrix [negation of scMatrix]
+
+#     ### Normalizing distances between neighbords
+#     dt = distances.T
+#     nd = (dt - dt.min(axis=0).values) / ( (dt.max(axis=0).values - dt.min(axis=0).values) + eps )
+#     nd = nd.T
+
+#     ## Distances
+#     scd = distances*scMatrix #Same class distance
+#     dcd = distances*dcMatrix #Different class distance
+#     ## Normalized distances
+#     scnd = nd*scMatrix #Same class normalized distance
+#     dcnd = nd*dcMatrix #Different class normalized distance
+    
+#     ### Lambda computation
+#     plamb = (1 - scnd) * scMatrix
+#     lamb = (dcnd + plamb)
+#     lambs = torch.sum(lamb,axis=1)
+#     lambs2 = (lambs / (torch.max(lambs) + eps)) ** (1/p)
+#     lambr = torch.sum(lambs2) / (y.shape[0])
+
+#     varsc = torch.var(scnd)
+#     vardf = torch.var(dcnd)
+#     omega = (1 - (varsc+vardf))**(1/q)
+    
+#     gamma = torch.sum((torch.sum(scMatrix, axis=1) / k) ** (1/r)) / (y.shape[0])
+    
+#     return (lambr + gamma + omega)/3
+
+def score(origin, y_orig, target=None, y_targ=None, k=5, p=2, q=2, r=2):
     """Compute class prototypes from support samples.
 
     # Arguments
@@ -291,22 +352,24 @@ def score(X, y, k=5, p=2, q=2, r=2):
     # Returns
         
     """
+    target = origin if type(target) == type(None) else target
+    y_targ = y_orig if type(y_targ) == type(None) else y_targ
+
     eps = 0.000001
-    if k >= X.shape[0]:
-        k = 3
+    k = 3 if k >= target.shape[0] else k
 
     #min max scale by feature
-    a = X - X.min(axis=0).values
-    b = X.max(axis=0).values - X.min(axis=0).values
-    X = torch.divide(a , b+eps)
+    # a = target - target.min(axis=0).values
+    # b = X.max(axis=0).values - X.min(axis=0).values
+    # X = torch.divide(a , b+eps)
 
-    distances, indices = nearest_neighbors(X, k=k+1)
+    distances, indices = nearest_neighbors(origin, target, k=k+1)
     distances = distances[:,1:]
     indices = indices[:,1:]
 
     # class by neighbor
-    classes = y[indices]
-    yMatrix = y.repeat(k,1).T
+    classes = y_targ[indices]
+    yMatrix = y_orig.repeat(k,1).T
     scMatrix = (yMatrix == classes)*1 # Same class matrix [1 same class, 0 diff class]
     dcMatrix = (scMatrix)*(-1)+1 # Different class matrix [negation of scMatrix]
 
@@ -327,10 +390,16 @@ def score(X, y, k=5, p=2, q=2, r=2):
     lamb = (dcnd + plamb)
     lambs = torch.sum(lamb,axis=1)
     lambs2 = (lambs / (torch.max(lambs) + eps)) ** (1/p)
-    lambr = torch.sum(lambs2) / (y.shape[0])
+    lambr = torch.sum(lambs2) / (y_orig.shape[0])
+
+    varsc = torch.var(scnd)
+    vardf = torch.var(dcnd)
+    omega = (1 - (varsc+vardf))**(1/q)
     
-    gamma = torch.sum((torch.sum(scMatrix, axis=1) / k) ** (1/r)) / (y.shape[0])
+    gamma = torch.sum((torch.sum(scMatrix, axis=1) / k) ** (1/r)) / (y_orig.shape[0])
     
+    # return (lambr + gamma + omega)/3
+    # return lambr
     return (lambr + gamma)/2
 
 

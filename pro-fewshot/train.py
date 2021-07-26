@@ -67,10 +67,10 @@ def main(args):
         if 'params' in model_detail:
             pretrained_dict = model_detail['params']
             # remove weights for FC
-            pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
-            pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-            print('Pretrained dict keys:')
-            print(pretrained_dict.keys())
+            # pretrained_dict = {'encoder.'+k: v for k, v in pretrained_dict.items()}
+            # pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+            # print('Pretrained dict keys:')
+            # print(pretrained_dict.keys())
         elif 'model_sd' in model_detail:
             pretrained_dict = model_detail['model_sd']
             # remove weights for FC
@@ -119,13 +119,23 @@ def main(args):
             data = batch[0].cuda()
             
             logits = model(data)
-            loss = F.cross_entropy(logits, train_label)
-            acc = count_acc(logits, train_label)
 
-            if 'ICN_Loss' in args.modules:
+            loss = 0
+            
+            if 'ICN_Loss' not in args.modules or ('ICN_Loss' in args.modules and 'cross' in args.losses):
+                loss = F.cross_entropy(logits, train_label)
+
+            if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
                 supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
                 icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
                 loss += icn_loss_supp
+
+            if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
+                supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
+                icn_loss_query = 1 - score(globals.query_fts, train_label, globals.supp_fts, supp_labels)
+                loss += icn_loss_query
+
+            acc = count_acc(logits, train_label)
 
             writer.add_scalar('data/loss', float(loss), epoch)
             writer.add_scalar('data/acc', float(acc), epoch)
@@ -151,13 +161,22 @@ def main(args):
                 data = batch[0].cuda()
                 
                 logits = model(data)
-                loss = F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)
 
-                if 'ICN_Loss' in args.modules:
-                    supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
+                loss = 0
+            
+                if 'ICN_Loss' not in args.modules or ('ICN_Loss' in args.modules and 'cross' in args.losses):
+                    loss = F.cross_entropy(logits, label)
+
+                if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
+                    supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
                     icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
                     loss += icn_loss_supp
+
+                if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
+                    supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
+                    icn_loss_query = 1 - score(globals.query_fts, label, globals.supp_fts, supp_labels)
+                    loss += icn_loss_query
 
                 val_loss.add(loss.item())
                 val_acc.add(acc)

@@ -60,6 +60,8 @@ def get_args():
     parser.add_argument('--icn_n_dims', type=int, default=6)
     parser.add_argument('--icn_original_score', action='store_true')
 
+    parser.add_argument('--losses', type=str, default='cross') # cross, suppicnn_orig, suppicnn_new, queryicnn_orig, queryicnn_new, prototriplet
+
     return parser.parse_args()
 
 def process_args(args):
