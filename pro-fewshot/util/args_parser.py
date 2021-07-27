@@ -61,6 +61,7 @@ def get_args():
     parser.add_argument('--icn_original_score', action='store_true')
 
     parser.add_argument('--losses', type=str, default='cross') # cross, suppicnn_orig, suppicnn_new, queryicnn_orig, queryicnn_new, prototriplet
+    parser.add_argument('--query_protos', action='store_true')
 
     return parser.parse_args()
 

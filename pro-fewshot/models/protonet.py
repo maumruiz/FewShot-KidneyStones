@@ -58,15 +58,16 @@ class ProtoNet(nn.Module):
         if 'ICN' in self.args.modules:
             supp_fts, query_fts = self.icn.transform(supp_fts, query_fts)
 
-        if 'ICN_Loss' in self.args.modules:
-            globals.supp_fts = supp_fts
-            globals.query_fts = query_fts
-
         # Save the features to later visualization
         if self.args.save_features:
             self.args.features.append(supp_fts.cpu().detach())
 
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
+
+        if 'ICN_Loss' in self.args.modules:
+            globals.supp_fts = supp_fts
+            globals.query_fts = query_fts
+            globals.prototypes = prototypes
 
         logits = -euclidean_dist(query_fts, prototypes) / self.args.temperature
         
