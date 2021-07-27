@@ -169,12 +169,12 @@ def main(args):
                     loss = F.cross_entropy(logits, label)
 
                 if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
-                    supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
+                    supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
                     icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
                     loss += icn_loss_supp
 
                 if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
-                    supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
+                    supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
                     icn_loss_query = 1 - score(globals.query_fts, label, globals.supp_fts, supp_labels)
                     loss += icn_loss_query
 
