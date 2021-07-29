@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import FewShotSampler
-from algorithms.icn import score
+from algorithms.icn import score, modified_score
 from util.utils import set_gpu, Averager, Timer, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
@@ -127,18 +127,17 @@ def main(args):
 
             if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
                 supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
-                icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
-                loss += icn_loss_supp
+                supp_score = modified_score(globals.supp_fts, supp_labels)
+                loss += (-torch.log(supp_score))
 
             if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
                 if args.query_protos:
                     proto_labels = torch.arange(0, args.train_way).type(torch.int).cuda()
-                    icn_loss_query = 1 - score(globals.query_fts, train_label, globals.prototypes, proto_labels)
+                    query_score = modified_score(globals.query_fts, train_label, globals.prototypes, proto_labels)
                 else:
                     supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
-                    icn_loss_query = 1 - score(globals.query_fts, train_label, globals.supp_fts, supp_labels)
-
-                loss += icn_loss_query
+                    query_score = modified_score(globals.query_fts, train_label, globals.supp_fts, supp_labels)
+                loss += (-torch.log(query_score))
 
             acc = count_acc(logits, train_label)
 
@@ -175,17 +174,17 @@ def main(args):
 
                 if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
                     supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
-                    icn_loss_supp = 1 - score(globals.supp_fts, supp_labels)
-                    loss += icn_loss_supp
+                    supp_score = modified_score(globals.supp_fts, supp_labels)
+                    loss += (-torch.log(supp_score))
 
                 if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
                     if args.query_protos:
                         proto_labels = torch.arange(0, args.way).type(torch.int).cuda()
-                        icn_loss_query = 1 - score(globals.query_fts, label, globals.prototypes, proto_labels)
+                        query_score = modified_score(globals.query_fts, label, globals.prototypes, proto_labels)
                     else:
                         supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
-                        icn_loss_query = 1 - score(globals.query_fts, label, globals.supp_fts, supp_labels)
-                    loss += icn_loss_query
+                        query_score = modified_score(globals.query_fts, label, globals.supp_fts, supp_labels)
+                    loss += (-torch.log(query_score))
 
                 val_loss.add(loss.item())
                 val_acc.add(acc)

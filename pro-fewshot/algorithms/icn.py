@@ -402,4 +402,61 @@ def score(origin, y_orig, target=None, y_targ=None, k=5, p=2, q=2, r=2):
     # return lambr
     return (lambr + gamma)/2
 
+def modified_score(origin, y_orig, target=None, y_targ=None, k=4):
+    target = origin if type(target) == type(None) else target
+    y_targ = y_orig if type(y_targ) == type(None) else y_targ
 
+    eps = 0.0000001
+    k = target.shape[0] - 2 if k+2 >= target.shape[0] else k
+
+    distances, indices = nearest_neighbors(origin, target, k=k+2)
+    distances = distances[:,1:]
+    indices = indices[:,1:]
+
+    # class by neighbor
+    classes = y_targ[indices]
+    yMatrix = y_orig.repeat(k+1,1).T
+    scMatrix = (yMatrix == classes)*1 # Same class matrix [1 same class, 0 diff class]
+    dcMatrix = (scMatrix)*(-1)+1 # Different class matrix [negation of scMatrix]
+
+    ### Lambda Computation
+
+    # Same class distance
+    dt = distances.T
+    dcnd = distances*dcMatrix
+    nn_dc = (dcnd + torch.where(dcnd.eq(0.), float('inf'), 0.)).min(axis=1).values
+    nd = dt / (nn_dc + eps)
+    nd = nd / nd.max(axis=0).values
+    nd = nd.T
+
+    nd = nd[:, :-1]
+    scMatrix = scMatrix[:, :-1]
+    scnd = nd*scMatrix
+
+    scCounts = scMatrix.sum(axis=1)
+    scndsum = scnd.sum(axis=1) / (scCounts + eps)
+    sclamb = 1 - (scndsum.sum() / (torch.count_nonzero(scCounts) + eps))
+
+    dcnd = dcnd[:, :-1]
+    dcMatrix = dcMatrix[:, :-1]
+
+    # Different class distance
+    dcnd = dcnd / (dcnd.max() + eps)
+    dcop = -1 if torch.all(dcMatrix == 0) else 0
+    dcCounts = dcMatrix.sum(axis=1)
+    dcndsum = dcnd.sum(axis=1) / (dcCounts + eps)
+    dclamb = dcndsum.nansum() / (torch.count_nonzero(dcCounts) + eps)
+    dclamb = torch.abs(dclamb + dcop)
+
+    lambr = (sclamb + dclamb) / 2
+
+    ## Omega Calculation
+    # varsc = torch.var(scnd)
+    # vardf = torch.var(dcnd)
+    # omega = 1 - (varsc+vardf)
+    
+    ### Gamma computation
+    gamma = torch.sum(torch.sum(scMatrix, axis=1) / k) / (y_orig.shape[0]) if k+2 < target.shape[0] else 1.0
+    
+    # return (lambr + gamma + omega) / 3
+    return (lambr + gamma) / 2
