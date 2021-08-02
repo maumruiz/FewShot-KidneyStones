@@ -10,12 +10,12 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import FewShotSampler
-from algorithms.icn import score, modified_score
+from algorithms.icnn_loss import get_icnn_loss
 from util.utils import set_gpu, Averager, Timer, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
 from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
 from util.logger import ExpLogger
-import util.globals as globals
+import util.globals as glob
 
 
 def main(args):
@@ -30,7 +30,7 @@ def main(args):
     explog = ExpLogger(args)
     writer = SummaryWriter(log_dir=args.save_path)
 
-    globals.init()
+    glob.init()
 
     print('-- Loading data --')
     if args.dataset == 'MiniImageNet':
@@ -117,28 +117,8 @@ def main(args):
         train_batches = tqdm.tqdm(train_loader, dynamic_ncols=True, leave=False)
         for batch in train_batches:
             data = batch[0].cuda()
-            
             logits = model(data)
-
-            loss = 0
-            
-            if 'ICN_Loss' not in args.modules or ('ICN_Loss' in args.modules and 'cross' in args.losses):
-                loss = F.cross_entropy(logits, train_label)
-
-            if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
-                supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
-                supp_score = modified_score(globals.supp_fts, supp_labels)
-                loss += (-torch.log(supp_score))
-
-            if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
-                if args.query_protos:
-                    proto_labels = torch.arange(0, args.train_way).type(torch.int).cuda()
-                    query_score = modified_score(globals.query_fts, train_label, globals.prototypes, proto_labels)
-                else:
-                    supp_labels = torch.arange(0, args.train_way, 1/args.shot).type(torch.int).cuda()
-                    query_score = modified_score(globals.query_fts, train_label, globals.supp_fts, supp_labels)
-                loss += (-torch.log(query_score))
-
+            loss = get_icnn_loss(args, logits, args.train_way, train_label) if 'ICN_Loss' in args.modules else F.cross_entropy(logits, train_label)
             acc = count_acc(logits, train_label)
 
             writer.add_scalar('data/loss', float(loss), epoch)
@@ -152,7 +132,6 @@ def main(args):
             loss.backward()
             optimizer.step()
 
-
         ###### Validation step ###########
         model.eval()
         val_loss = Averager()
@@ -163,28 +142,9 @@ def main(args):
             val_batches = tqdm.tqdm(val_loader, dynamic_ncols=True, leave=False)
             for batch in val_batches:
                 data = batch[0].cuda()
-                
                 logits = model(data)
+                loss = get_icnn_loss(args, logits, args.way, label) if 'ICN_Loss' in args.modules else F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)
-
-                loss = 0
-            
-                if 'ICN_Loss' not in args.modules or ('ICN_Loss' in args.modules and 'cross' in args.losses):
-                    loss = F.cross_entropy(logits, label)
-
-                if 'ICN_Loss' in args.modules and 'suppicnn' in args.losses:
-                    supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
-                    supp_score = modified_score(globals.supp_fts, supp_labels)
-                    loss += (-torch.log(supp_score))
-
-                if 'ICN_Loss' in args.modules and 'queryicnn' in args.losses:
-                    if args.query_protos:
-                        proto_labels = torch.arange(0, args.way).type(torch.int).cuda()
-                        query_score = modified_score(globals.query_fts, label, globals.prototypes, proto_labels)
-                    else:
-                        supp_labels = torch.arange(0, args.way, 1/args.shot).type(torch.int).cuda()
-                        query_score = modified_score(globals.query_fts, label, globals.supp_fts, supp_labels)
-                    loss += (-torch.log(query_score))
 
                 val_loss.add(loss.item())
                 val_acc.add(acc)
