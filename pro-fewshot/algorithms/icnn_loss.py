@@ -176,4 +176,7 @@ def get_icnn_loss(args, logits, way, qry_labels):
 
         loss += (-torch.log(score))
 
+    count = len(args.losses.split(','))
+    loss = loss / count
+
     return loss
