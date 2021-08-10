@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 import util.globals as glob
 
-def distance_matrix(x, y=None, p = 2):
+def distance_matrix(x, y=None, p=2):
     y = x if type(y) == type(None) else y
 
     n = x.size(0)
@@ -147,6 +147,25 @@ def modified_score(origin, y_orig, target=None, y_targ=None, k=4, ipc=None):
     # return (lambr + gamma + omega) / 3
     return (lambr + gamma) / 2
 
+def proto_triplet_loss(queries, y_qry, protos, y_protos, way=5, margin=0.5):
+    distances, indices = nearest_neighbors(queries, protos, k=way)
+    classes = y_protos[indices]
+    yMatrix = y_qry.repeat(way,1).T
+    scMatrix = (yMatrix == classes)*1
+    dcMatrix = (scMatrix)*(-1)+1
+
+    scd = distances*scMatrix
+    scp = scd.max(axis=1).values
+
+    dcd = distances*dcMatrix
+    dcd += torch.where(dcd.eq(0.), float('inf'), 0.)
+    dcp = dcd.min(axis=1).values
+
+
+    dists = torch.stack((scp - dcp + margin, torch.zeros_like(scp)), axis=1)
+    return torch.mean(torch.max(dists, axis=1).values)
+
+
 def get_icnn_loss(args, logits, way, qry_labels):
     loss = 0
 
@@ -175,6 +194,10 @@ def get_icnn_loss(args, logits, way, qry_labels):
         score = modified_score(features, labels, ipc=ipc)
 
         loss += (-torch.log(score))
+    
+    if 'prototriplet' in args.losses:
+        proto_labels = torch.arange(0, way).type(torch.int).cuda()
+        loss += proto_triplet_loss(glob.query_fts, qry_labels, glob.prototypes, proto_labels, way)
 
     count = len(args.losses.split(','))
     loss = loss / count
