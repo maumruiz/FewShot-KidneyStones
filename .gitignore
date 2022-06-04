@@ -3,3 +3,4 @@ __pycache__/
 runs/
 runs_debug/
 pretrained/
+datasets/

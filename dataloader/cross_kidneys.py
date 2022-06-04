@@ -7,36 +7,48 @@ import numpy as np
 
 THIS_PATH = osp.dirname(__file__)
 ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
-# IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/KidneyStones/images'))
-# SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../../datasets/KidneyStones/split'))
-IMAGE_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/KidneyStones/images'))
-SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/KidneyStones/split'))
+DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/CrossKidneys'))
 
-class KidneyStones(Dataset):
+class CrossKidneys(Dataset):
     """ Usage: 
     """
     def __init__(self, setname, args):
-        csv_path = osp.join(SPLIT_PATH, setname + '.csv')
-        lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
+        if setname == 'train':
+            ds = args.trainset
+        elif setname == 'val':
+            ds = args.valset
+        elif setname == 'test':
+            ds = args.testset
 
-        if args.cross_ds and args.cross_ds == 'VincentEstrade':
-            csv_path = osp.join(SPLIT_PATH, 'test-ve.csv')
-            lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
+        ds = ds.split(',')
+        datasets = []
+        for dataset in ds:
+            if dataset == 'Cross':
+                cross_ds = [f'MiniImagenet_{setname}', f'CUB_{setname}', f'CropDisease_{setname}', f'Eurosat_{setname}', f'ISIC_{setname}']
+                datasets += cross_ds
+            elif dataset == 'Daudon' or dataset == 'Estrade' or dataset == 'Elbeze':
+                datasets.append(f'{dataset}_{args.ks_set}')
+            else:
+                datasets.append(f'{dataset}_{setname}')
 
         data = []
         label = []
         lb = -1
+        wnids = []
 
-        self.wnids = []
+        for dataset in datasets:
+            csv_path = osp.join(SPLIT_PATH, f'{dataset}.csv')
+            lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
 
-        for l in lines:
-            name, wnid = l.split(',')
-            path = osp.join(IMAGE_PATH, name)
-            if wnid not in self.wnids:
-                self.wnids.append(wnid)
-                lb += 1
-            data.append(path)
-            label.append(lb)
+            for l in lines:
+                name, wnid = l.split(',')
+                path = osp.join(DATASETS_PATH, dataset, 'images', name)
+                if wnid not in wnids:
+                    wnids.append(wnid)
+                    lb += 1
+                data.append(path)
+                label.append(lb)
 
         self.data = data
         self.label = label

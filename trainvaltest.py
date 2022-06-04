@@ -41,6 +41,10 @@ def main(args):
         from dataloader.tiered_imagenet import tieredImageNet as Dataset
     elif args.dataset == 'KidneyStones':
         from dataloader.kidney_stones import KidneyStones as Dataset
+    elif args.dataset == 'Cross':
+        from dataloader.cross import Cross as Dataset
+    elif args.dataset == 'CrossKidneys':
+        from dataloader.cross_kidneys import CrossKidneys as Dataset
     else:
         raise ValueError('Non-supported Dataset.')
 
@@ -175,8 +179,8 @@ def main(args):
         explog.val_loss.append(val_loss)
         explog.val_acc.append(val_acc)
 
-        explog.save(args.save_path)
-        torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
+        # explog.save(args.save_path)
+        # torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'epoch-last.pth'))
 
         lr_scheduler.step()
         
@@ -206,16 +210,21 @@ def main(args):
         test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
         for i, batch in enumerate(test_batches, 1):
             data = batch[0].cuda()
-            
             logits = model(data)
             acc = count_acc(logits, label)
+            ave_acc.add(acc)
+            test_acc_record[i-1] = acc
 
             if args.save_features:
                 args.fts_labels.append(batch[1][:args.way*args.shot])
                 args.fts_ids.append(batch[2][:args.way*args.shot])
+
+            if args.save_logits:
+                labels = batch[1][:args.way*args.shot].unique_consecutive()
+                pred = torch.argmax(logits, dim=1)
+                explog.query_predictions += [labels[x].item() for x in pred]
+                explog.query_labels += batch[1][args.way*args.shot:].tolist()
             
-            ave_acc.add(acc)
-            test_acc_record[i-1] = acc
             explog.test_acc.append(acc)
 
             test_batches.set_description(f'Testing | Avg acc={ave_acc.item() * 100:.2f} |')
@@ -237,6 +246,9 @@ def main(args):
 
     if args.save_features:
         explog.save_features(args.save_path)
+
+    if args.save_logits:
+        explog.save_logits(args.save_path)
 
     if 'ICN' in args.modules and args.save_icn_scores:
         explog.save_icnn_scores(args.save_path)
