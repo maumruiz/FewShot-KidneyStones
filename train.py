@@ -10,10 +10,9 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import FewShotSampler
-from algorithms.icnn_loss import get_icnn_loss
 from util.utils import set_gpu, Averager, Timer, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
-from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
+from util.args_parser import get_args, process_args, print_args, init_saving_features
 from util.logger import ExpLogger
 import util.globals as glob
 
@@ -122,7 +121,7 @@ def main(args):
         for batch in train_batches:
             data = batch[0].cuda()
             logits = model(data)
-            loss = get_icnn_loss(args, logits, args.train_way, train_label) if 'ICN_Loss' in args.modules else F.cross_entropy(logits, train_label)
+            loss = F.cross_entropy(logits, train_label)
             acc = count_acc(logits, train_label)
 
             writer.add_scalar('data/loss', float(loss), epoch)
@@ -147,7 +146,7 @@ def main(args):
             for batch in val_batches:
                 data = batch[0].cuda()
                 logits = model(data)
-                loss = get_icnn_loss(args, logits, args.way, label) if 'ICN_Loss' in args.modules else F.cross_entropy(logits, label)
+                loss = F.cross_entropy(logits, label)
                 acc = count_acc(logits, label)
 
                 val_loss.add(loss.item())
@@ -202,10 +201,6 @@ def main(args):
     if args.save_features:
         init_saving_features(args)
 
-    if 'ICN' in args.modules:
-        args.save_icn_scores = True
-        init_saving_icn_scores(args)
-
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
         for i, batch in enumerate(test_batches, 1):
@@ -249,9 +244,6 @@ def main(args):
 
     if args.save_logits:
         explog.save_logits(args.save_path)
-
-    if 'ICN' in args.modules and args.save_icn_scores:
-        explog.save_icnn_scores(args.save_path)
     
     print(f"### Elapsed time: {elapsed_time}")
 

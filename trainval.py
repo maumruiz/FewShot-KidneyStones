@@ -10,8 +10,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from dataloader.samplers import FewShotSampler
 from util.utils import set_gpu, Averager, Timer, set_seed, delete_path
-from util.metric import compute_confidence_interval, count_acc
-from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
+from util.metric import count_acc
+from util.args_parser import get_args, process_args, print_args
 from util.logger import ExpLogger
 
 
@@ -39,6 +39,8 @@ def main(args):
         from dataloader.kidney_stones import KidneyStones as Dataset
     elif args.dataset == 'Cross':
         from dataloader.cross import Cross as Dataset
+    elif args.dataset == 'CrossKidneys':
+        from dataloader.cross_kidneys import CrossKidneys as Dataset
     else:
         raise ValueError('Non-supported Dataset.')
 
@@ -69,6 +71,12 @@ def main(args):
             # pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
             # print('Pretrained dict keys:')
             # print(pretrained_dict.keys())
+        elif 'model_sd' in model_detail:
+            pretrained_dict = model_detail['model_sd']
+            # remove weights for FC
+            pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+            print('Pretrained dict keys:')
+            print(pretrained_dict.keys())
         else:
             pretrained_dict = model_detail['model']
             pretrained_dict = {k.replace('module.', ''): v for k, v in pretrained_dict.items() if k.replace('module.', '') in model_dict}
@@ -192,9 +200,6 @@ def main(args):
 
     if args.save_features:
         explog.save_features(args.save_path)
-
-    if 'ICN' in args.modules and args.save_icn_scores:
-        explog.save_icnn_scores(args.save_path)
     
     print(f"Elapsed time: {elapsed_time}")
 

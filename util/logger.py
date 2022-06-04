@@ -31,10 +31,6 @@ class ExpLogger():
             arg_keys += ['ctm_blocks', 'ctm_out_channels', 'ctm_block_type', 
             'ctm_m_type', 'ctm_reduce_dims', 'ctm_split_blocks']
 
-        if 'ICN' in self.args['modules']:
-            arg_keys += ['icn_models', 'icn_reduction_set', 'icn_reduction_type', 'icn_original_score', 
-            'icn_multiple_components', 'icn_n_dims']
-
         if 'dataset' == 'Cross':
             arg_keys += ['cross_ds']
 
@@ -104,15 +100,7 @@ class ExpLogger():
         results_df.to_csv(osp.join(path, 'results.csv'), index=False)
 
     def save_features(self, path):
-        # ICN save different sizes of features
-        max_dim = max([x.size(1) for x in self.args['features']])
-        features = torch.cat(
-            [torch.cat(
-                (feature, torch.full((feature.size(0), max_dim - feature.size(1)), -1, dtype=torch.float)), axis=1) 
-            for feature in self.args['features']]
-        )
-
-        fts_df = pd.DataFrame(features.numpy())
+        fts_df = pd.DataFrame(self.args['features'].numpy())
         fts_df['label'] = torch.cat(self.args['fts_labels'], dim=0).numpy()
         fts_df['img_id'] = [id for ids in self.args['fts_ids'] for id in ids]
         cols = list(fts_df)
@@ -125,23 +113,6 @@ class ExpLogger():
         logits_df['label'] = self.query_labels
         logits_df['prediction'] = self.query_predictions
         logits_df.to_csv(osp.join(path, 'logits.csv'), index=False)
-
-    def save_icnn_scores(self, path):
-        icn_df = pd.DataFrame(self.args['icn_log'])
-        icn_df.to_csv(osp.join(path, 'icn_scores.csv'), index=False)
-
-        icn_result = icn_df["best"].value_counts()
-        icn_means = icn_df.mean()
-        icn_diffs = icn_means - icn_means['original']
-        icn_diffs = icn_diffs.drop(labels=['original'])
-
-        icn_result.index += '_count'
-        icn_means.index += '_mean'
-        icn_diffs.index += '_diff'
-        
-        icn_final = pd.concat([icn_result, icn_means, icn_diffs])
-
-        icn_result = icn_final.to_json(osp.join(path, 'icn_scores.json'), orient='index', indent=4)
 
     def save_model(self, path, name):
         if not osp.exists(f'pretrained/{name}.pth'):

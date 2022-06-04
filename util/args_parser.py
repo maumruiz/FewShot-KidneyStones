@@ -5,9 +5,8 @@ from util.utils import ensure_path
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet', 'KidneyStones', 'Cross'])
+    parser.add_argument('--dataset', type=str, default='MiniImageNet', choices=['MiniImageNet', 'CUB', 'TieredImageNet', 'KidneyStones', 'Cross', 'CrossKidneys'])
     parser.add_argument('--model', type=str, default='ProtoNet', choices=['ProtoNet', 'Classifier'])
-    parser.add_argument('--modules', type=str)
     parser.add_argument('--backbone', type=str, default='ConvNet', choices=['ConvNet', 'ResNet12', 'ResNet18', 'AmdimNet'])
     parser.add_argument('--optimizer', type=str, default='recommended', choices=['recommended', 'Adam', 'SGD'])
     parser.add_argument('--way', type=int, default=5)
@@ -22,6 +21,7 @@ def get_args():
     parser.add_argument('--step_size', type=int, default=20)
     parser.add_argument('--gamma', type=float, default=0.5)
     parser.add_argument('--temperature', type=float, default=1)
+
     parser.add_argument('--cross_ds', type=str)
     parser.add_argument('--model_name', type=str)
 
@@ -43,26 +43,6 @@ def get_args():
     parser.add_argument('--rkhs', type=int, default=1536)
     parser.add_argument('--nd', type=int, default=8)
 
-    # CTM args
-    parser.add_argument('--ctm_blocks', type=int, default=4)
-    parser.add_argument('--ctm_out_channels', type=int, default=0)
-    parser.add_argument('--ctm_block_type', type=str, default='ConvBlock', choices=['ConvBlock', 'ResBlock'])
-    parser.add_argument('--ctm_m_type', type=str, default='fused', choices=['fused', 'avg'])
-    parser.add_argument('--ctm_reduce_dims', action='store_true')
-    parser.add_argument('--ctm_split_blocks', action='store_true')
-
-    # ICN args
-    parser.add_argument('--save_icn_scores', action='store_true')
-    parser.add_argument('--icn_models', type=str, default='pca,isomap')
-    parser.add_argument('--icn_reduction_set', type=str, default='all', choices=['support', 'all'])
-    parser.add_argument('--icn_reduction_type', type=str, default='unsupervised', choices=['supervised', 'unsupervised'])
-    parser.add_argument('--icn_multiple_components', action='store_true')
-    parser.add_argument('--icn_n_dims', type=int, default=6)
-    parser.add_argument('--icn_original_score', action='store_true')
-
-    parser.add_argument('--losses', type=str, default='cross') # cross, suppicnn_orig, suppicnn_new, queryicnn_orig, queryicnn_new, prototriplet
-    parser.add_argument('--query_protos', action='store_true')
-
     return parser.parse_args()
 
 def process_args(args):
@@ -83,17 +63,6 @@ def process_args(args):
         del args.ctm_m_type
         del args.ctm_reduce_dims
         del args.ctm_split_blocks
-
-    if 'ICN' not in args.modules:
-        del args.save_icn_scores
-        del args.icn_models
-        del args.icn_reduction_set
-        del args.icn_reduction_type
-        del args.icn_multiple_components
-        del args.icn_n_dims
-        del args.icn_original_score
-    else:
-        args.icn_models = args.icn_models.split(',') if args.icn_models else []
 
     if args.backbone != 'AmdimNet':
         del args.ndf
@@ -139,8 +108,3 @@ def init_saving_features(args):
     args.features = []
     args.fts_ids = []
     args.fts_labels = []
-
-def init_saving_icn_scores(args):
-    args.icn_log = {}
-    args.icn_log['original'] = []
-    args.icn_log['best'] = []

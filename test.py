@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn
 from dataloader.samplers import FewShotSampler
 from util.utils import set_gpu, Averager, set_seed, delete_path
 from util.metric import compute_confidence_interval, count_acc
-from util.args_parser import get_args, process_args, print_args, init_saving_features, init_saving_icn_scores
+from util.args_parser import get_args, process_args, print_args, init_saving_features
 from util.logger import ExpLogger
 
 
@@ -29,6 +29,8 @@ def main(args):
         from dataloader.tiered_imagenet import tieredImageNet as Dataset
     elif args.dataset == 'KidneyStones':
         from dataloader.kidney_stones import KidneyStones as Dataset
+    elif args.dataset == 'CrossKidneys':
+        from dataloader.cross_kidneys import CrossKidneys as Dataset
     else:
         raise ValueError('Non-supported Dataset.')
 
@@ -64,10 +66,6 @@ def main(args):
 
     if args.save_features:
         init_saving_features(args)
-        
-    if 'ICN' in args.modules:
-        args.save_icn_scores = False
-        init_saving_icn_scores(args)
         
     with torch.no_grad():
         test_batches = tqdm.tqdm(loader, dynamic_ncols=True, leave=False)
@@ -106,9 +104,6 @@ def main(args):
 
     if args.save_logits:
         explog.save_logits(args.save_path)
-
-    if 'ICN' in args.modules and args.save_icn_scores:
-        explog.save_icnn_scores(args.save_path)
 
 if __name__ == '__main__':
     print('###### Start experiment with args: ######')
