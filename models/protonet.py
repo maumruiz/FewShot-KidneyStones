@@ -30,22 +30,11 @@ class ProtoNet(nn.Module):
         if args.parallel:
             self.encoder = torch.nn.DataParallel(self.encoder)
 
-        if 'CTM' in args.modules:
-            from networks.ctm import CTM
-            self.ctm = CTM(args, hdim)
-        
-        if 'ICN' in args.modules:
-            from algorithms.icn import ICN
-            self.icn = ICN(args)
-
     def forward(self, data):
         embeddings = self.encoder(data)
 
         supp_fts = embeddings[:self.args.way*self.args.shot]
         query_fts = embeddings[self.args.way*self.args.shot:]
-
-        if 'CTM' in self.args.modules:
-            supp_fts, query_fts = self.ctm(supp_fts, query_fts)
 
         n_dim = supp_fts.shape[-1]
         n_supp = supp_fts.shape[0]
@@ -55,20 +44,11 @@ class ProtoNet(nn.Module):
         supp_fts = nn.AvgPool2d(n_dim)(supp_fts).reshape(n_supp, -1)
         query_fts = nn.AvgPool2d(n_dim)(query_fts).reshape(n_qry, -1)
 
-        if 'ICN' in self.args.modules:
-            supp_fts, query_fts = self.icn.transform(supp_fts, query_fts)
-
         # Save the features to later visualization
         if self.args.save_features:
             self.args.features.append(supp_fts.cpu().detach())
 
         prototypes = self.compute_prototypes(supp_fts, self.args.way, self.args.shot)
-
-        if 'ICN_Loss' in self.args.modules:
-            globals.supp_fts = supp_fts
-            globals.query_fts = query_fts
-            globals.prototypes = prototypes
-
         logits = -euclidean_dist(query_fts, prototypes) / self.args.temperature
         
         return logits

@@ -23,13 +23,9 @@ class ExpLogger():
     def _to_obj(self):
         log = {}
         
-        arg_keys = ['dataset', 'model', 'modules', 'backbone', 'way', 'train_way', 
+        arg_keys = ['dataset', 'model', 'backbone', 'way', 'train_way', 
         'shot', 'query', 'max_epoch', 'train_epi', 'val_epi', 'test_epi', 'optimizer', 'lr', 'step_size',
         'gamma', 'temperature', 'init_weights', 'step_size', 'save_path', 'seed', 'tag']
-
-        if 'CTM' in self.args['modules']:
-            arg_keys += ['ctm_blocks', 'ctm_out_channels', 'ctm_block_type', 
-            'ctm_m_type', 'ctm_reduce_dims', 'ctm_split_blocks']
 
         if 'dataset' == 'Cross':
             arg_keys += ['cross_ds']

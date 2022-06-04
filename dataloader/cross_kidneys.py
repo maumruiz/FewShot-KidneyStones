@@ -25,12 +25,10 @@ class CrossKidneys(Dataset):
         datasets = []
         for dataset in ds:
             if dataset == 'Cross':
-                cross_ds = [f'MiniImagenet_{setname}', f'CUB_{setname}', f'CropDisease_{setname}', f'Eurosat_{setname}', f'ISIC_{setname}']
+                cross_ds = [f'MiniImagenet', f'CUB', f'CropDisease', f'Eurosat', f'ISIC']
                 datasets += cross_ds
-            elif dataset == 'Daudon' or dataset == 'Estrade' or dataset == 'Elbeze':
-                datasets.append(f'{dataset}_{args.ks_set}')
             else:
-                datasets.append(f'{dataset}_{setname}')
+                datasets.append(dataset)
 
         data = []
         label = []
@@ -38,7 +36,12 @@ class CrossKidneys(Dataset):
         wnids = []
 
         for dataset in datasets:
-            csv_path = osp.join(SPLIT_PATH, f'{dataset}.csv')
+
+            split_name = f'{dataset}_{setname}'
+            if dataset == 'Daudon' or dataset == 'Estrade' or dataset == 'Elbeze':
+                split_name = f'{dataset}_{args.ks_set}'
+
+            csv_path = osp.join(SPLIT_PATH, f'{split_name}.csv')
             lines = [x.strip() for x in open(csv_path, 'r').readlines()][1:]
 
             for l in lines:

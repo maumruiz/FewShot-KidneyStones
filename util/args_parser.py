@@ -25,6 +25,11 @@ def get_args():
     parser.add_argument('--cross_ds', type=str)
     parser.add_argument('--model_name', type=str)
 
+    parser.add_argument('--trainset', type=str)
+    parser.add_argument('--valset', type=str)
+    parser.add_argument('--testset', type=str)
+    parser.add_argument('--ks_set', type=str)
+
     # MiniImageNet, ConvNet, './saves/initialization/miniimagenet/con-pre.pth'
     # MiniImageNet, ResNet, './saves/initialization/miniimagenet/res-pre.pth'
     # CUB, ConvNet, './saves/initialization/cub/con-pre.pth'
@@ -54,16 +59,6 @@ def process_args(args):
     if args.save_features:
         init_saving_features(args)
 
-    args.modules = args.modules.split(',') if args.modules else []
-
-    if 'CTM' not in args.modules:
-        del args.ctm_blocks
-        del args.ctm_out_channels
-        del args.ctm_block_type
-        del args.ctm_m_type
-        del args.ctm_reduce_dims
-        del args.ctm_split_blocks
-
     if args.backbone != 'AmdimNet':
         del args.ndf
         del args.rkhs
@@ -83,7 +78,7 @@ def process_args(args):
     gmt = time.localtime() 
     # timestmp = f'{gmt.tm_year}{gmt.tm_mon:02d}{gmt.tm_mday:02d}{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
     timestmp = f'{gmt.tm_mon:02d}{gmt.tm_mday:02d}-{gmt.tm_hour:02d}{gmt.tm_min:02d}{gmt.tm_sec:02d}'
-    path1 = [args.dataset, args.model, args.backbone] + args.modules
+    path1 = [args.dataset, args.model, args.backbone]
     save_path1 = "-".join(path1)
     save_path2 = f'{args.way}way{args.shot}shot'
     save_path3 = f'{args.tag:02d}_{timestmp}'

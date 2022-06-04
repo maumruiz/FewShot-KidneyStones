@@ -1,0 +1,8 @@
+python train.py --way 5 --shot 5 --gpu $1 --backbone AmdimNet --temperature 128 --step_size 20 --lr 0.0002 --init_weights pretrained/imagenet900.pth --dataset CrossKidneys --trainset Cross --valset Daudon --testset Elbeze --ks_set mixed
+python train.py --way 5 --shot 5 --gpu $1 --backbone AmdimNet --temperature 128 --step_size 20 --lr 0.0002 --init_weights pretrained/imagenet900.pth --dataset CrossKidneys --trainset Cross --valset Daudon --testset Estrade --ks_set mixed
+
+python train.py --way 5 --shot 5 --gpu $1 --backbone AmdimNet --temperature 128 --step_size 20 --lr 0.0002 --init_weights pretrained/imagenet900.pth --dataset CrossKidneys --trainset Cross --valset Daudon --testset Elbeze --ks_set section
+python train.py --way 5 --shot 5 --gpu $1 --backbone AmdimNet --temperature 128 --step_size 20 --lr 0.0002 --init_weights pretrained/imagenet900.pth --dataset CrossKidneys --trainset Cross --valset Daudon --testset Estrade --ks_set section
+
+python train.py --way 5 --shot 5 --gpu $1 --backbone AmdimNet --temperature 128 --step_size 20 --lr 0.0002 --init_weights pretrained/imagenet900.pth --dataset CrossKidneys --trainset Cross --valset Daudon --testset Elbeze --ks_set surface
+python train.py --way 5 --shot 5 --gpu $1 --backbone AmdimNet --temperature 128 --step_size 20 --lr 0.0002 --init_weights pretrained/imagenet900.pth --dataset CrossKidneys --trainset Cross --valset Daudon --testset Estrade --ks_set surface
