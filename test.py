@@ -45,7 +45,7 @@ def main(args):
         raise ValueError('Non-supported Model.')
     model = Model(args)
     
-    model_detail = torch.load(args.model_path)
+    model_detail = torch.load(args.init_weights)
     if 'params' in model_detail:
         model_dict = model_detail['params']
     else:
@@ -58,7 +58,7 @@ def main(args):
     model = model.cuda()
     model.eval()
 
-    model_name = args.model_path.split('/')[1].split('.')[0]
+    model_name = args.init_weights.split('/')[1].split('.')[0]
     print(f"###### Testing: Model {model_name} | Shot: {args.shot} | Experiment {args.tag} ######")
     test_acc_record = np.zeros((args.test_epi,))
     ave_acc = Averager()

@@ -102,6 +102,7 @@ def main(args):
 
     print(f'###### Training experiment {args.tag} ######')
     # torch.autograd.set_detect_anomaly(True)
+    max_acc_model = None
     real_way = args.way
 
     train_label = torch.arange(0, args.train_way, 1 / args.query).long().cuda() 
@@ -169,6 +170,7 @@ def main(args):
             explog.max_acc = val_acc
             explog.max_acc_epoch = epoch
             torch.save(dict(params=model.state_dict()), osp.join(args.save_path, 'max_acc.pth'))
+            max_acc_model = dict(params=model.state_dict())
             log_str += ' ---- NEW BEST EPOCH ----'
 
         print(log_str)
@@ -185,6 +187,9 @@ def main(args):
         
     writer.close()
     explog.save_json(args.save_path)
+
+    if args.model_name:
+        torch.save(max_acc_model, osp.join('pretrained', f'{args.model_name}.pth'))
 
 
     print('###### Testing ######')

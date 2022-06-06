@@ -1,0 +1,2 @@
+python train.py --way 5 --shot 5 --gpu $1 --init_weights pretrained/Img900-Mini80-valDaudon.pth --dataset CrossKidneys --trainset CUB --valset Daudon --testset Elbeze --ks_set mixed --model_name Img900-Mini80-CUB-valDaudon --tag 14
+python train.py --way 5 --shot 5 --gpu $1 --init_weights pretrained/Img900-Mini80-CUB-valDaudon.pth --dataset CrossKidneys --trainset CropDisease,ISIC,Eurosat --valset Daudon --testset Elbeze --ks_set mixed --model_name Img900-Mini80-CUB-All-valDaudon --tag 15

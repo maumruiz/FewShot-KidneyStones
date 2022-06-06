@@ -7,8 +7,11 @@ import numpy as np
 
 THIS_PATH = osp.dirname(__file__)
 ROOT_PATH = osp.abspath(osp.join(THIS_PATH, '..'))
-DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets'))
-SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/CrossKidneys'))
+DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, '../datasets'))
+SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, '../datasets/CrossKidneys'))
+# DATASETS_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets'))
+# SPLIT_PATH = osp.normpath(osp.join(ROOT_PATH, 'datasets/CrossKidneys'))
+
 
 class CrossKidneys(Dataset):
     """ Usage: 
@@ -25,7 +28,7 @@ class CrossKidneys(Dataset):
         datasets = []
         for dataset in ds:
             if dataset == 'Cross':
-                cross_ds = [f'MiniImagenet', f'CUB', f'CropDisease', f'Eurosat', f'ISIC']
+                cross_ds = ['MiniImagenet', 'CropDisease', 'Eurosat', 'ISIC']
                 datasets += cross_ds
             else:
                 datasets.append(dataset)
